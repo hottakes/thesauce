@@ -1,0 +1,94 @@
+import { useState } from "react";
+import { AnimatedBackground } from "./AnimatedBackground";
+import { StageWrapper } from "./StageWrapper";
+import { LandingStage } from "./stages/LandingStage";
+import { QualifierStage } from "./stages/QualifierStage";
+import { ProfileBuilderStage } from "./stages/ProfileBuilderStage";
+import { ResultCardStage } from "./stages/ResultCardStage";
+import { WaitlistDashboard } from "./stages/WaitlistDashboard";
+import {
+  ApplicantData,
+  generateReferralCode,
+  getRandomWaitlistPosition,
+  getRandomAmbassadorType,
+} from "@/types/applicant";
+
+type Stage = "landing" | "qualifier" | "profile" | "result" | "dashboard";
+
+export const IntakeFlow = () => {
+  const [stage, setStage] = useState<Stage>("landing");
+  const [applicantData, setApplicantData] = useState<Partial<ApplicantData>>({
+    points: 0,
+  });
+
+  const handleQualifierComplete = (data: {
+    school: string;
+    is19Plus: boolean;
+    instagramHandle: string;
+  }) => {
+    setApplicantData((prev) => ({ ...prev, ...data }));
+    setStage("profile");
+  };
+
+  const handleProfileComplete = (data: {
+    personalityTraits: string[];
+    interests: string[];
+    householdSize: number;
+    sceneTypes: string[];
+    sceneCustom: string;
+    contentUploaded: boolean;
+  }) => {
+    const ambassadorType = getRandomAmbassadorType();
+    const referralCode = generateReferralCode();
+    const waitlistPosition = getRandomWaitlistPosition();
+
+    setApplicantData((prev) => ({
+      ...prev,
+      ...data,
+      ambassadorType: ambassadorType.name,
+      referralCode,
+      waitlistPosition,
+    }));
+    setStage("result");
+  };
+
+  const getResultCardData = () => ({
+    instagramHandle: applicantData.instagramHandle || "user",
+    householdSize: applicantData.householdSize || 1,
+    personalityTraits: applicantData.personalityTraits || [],
+    ambassadorType: getRandomAmbassadorType(),
+  });
+
+  const getDashboardData = () => ({
+    waitlistPosition: applicantData.waitlistPosition || getRandomWaitlistPosition(),
+    referralCode: applicantData.referralCode || generateReferralCode(),
+    points: applicantData.points || 0,
+  });
+
+  return (
+    <div className="relative min-h-screen">
+      <AnimatedBackground />
+
+      <StageWrapper stageKey={stage}>
+        {stage === "landing" && (
+          <LandingStage onStart={() => setStage("qualifier")} />
+        )}
+        {stage === "qualifier" && (
+          <QualifierStage onComplete={handleQualifierComplete} />
+        )}
+        {stage === "profile" && (
+          <ProfileBuilderStage onComplete={handleProfileComplete} />
+        )}
+        {stage === "result" && (
+          <ResultCardStage
+            data={getResultCardData()}
+            onContinue={() => setStage("dashboard")}
+          />
+        )}
+        {stage === "dashboard" && (
+          <WaitlistDashboard data={getDashboardData()} />
+        )}
+      </StageWrapper>
+    </div>
+  );
+};
