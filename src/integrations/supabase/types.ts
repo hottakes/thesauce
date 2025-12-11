@@ -14,6 +14,65 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_notes: {
+        Row: {
+          admin_id: string | null
+          applicant_id: string
+          content: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          admin_id?: string | null
+          applicant_id: string
+          content: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          admin_id?: string | null
+          applicant_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_notes_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ambassador_types: {
+        Row: {
+          assignment_weight: number
+          created_at: string
+          description: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          assignment_weight?: number
+          created_at?: string
+          description: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          assignment_weight?: number
+          created_at?: string
+          description?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       applicants: {
         Row: {
           ambassador_type: string
@@ -31,6 +90,7 @@ export type Database = {
           scene_custom: string | null
           scene_types: string[]
           school: string
+          status: string
           waitlist_position: number
         }
         Insert: {
@@ -49,6 +109,7 @@ export type Database = {
           scene_custom?: string | null
           scene_types?: string[]
           school: string
+          status?: string
           waitlist_position: number
         }
         Update: {
@@ -67,7 +128,197 @@ export type Database = {
           scene_custom?: string | null
           scene_types?: string[]
           school?: string
+          status?: string
           waitlist_position?: number
+        }
+        Relationships: []
+      }
+      challenges: {
+        Row: {
+          created_at: string
+          description: string | null
+          external_url: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          points: number
+          sort_order: number
+          title: string
+          verification_type: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          points?: number
+          sort_order?: number
+          title: string
+          verification_type?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          external_url?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          points?: number
+          sort_order?: number
+          title?: string
+          verification_type?: string
+        }
+        Relationships: []
+      }
+      interests: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      personality_traits: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      schools: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          spots_remaining: number
+          spots_total: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          spots_remaining?: number
+          spots_total?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          spots_remaining?: number
+          spots_total?: number
+        }
+        Relationships: []
+      }
+      settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      venue_types: {
+        Row: {
+          created_at: string
+          emoji: string | null
+          id: string
+          is_active: boolean
+          label: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          label: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          emoji?: string | null
+          id?: string
+          is_active?: boolean
+          label?: string
+          sort_order?: number
         }
         Relationships: []
       }
@@ -76,10 +327,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -206,6 +463,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
