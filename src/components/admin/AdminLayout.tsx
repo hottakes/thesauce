@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,7 +43,9 @@ export const AdminLayout = () => {
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
-        <span className="font-semibold gradient-text">Sauce Admin</span>
+        <Link to="/" className="font-semibold gradient-text hover:opacity-80 transition-opacity">
+          Sauce Admin
+        </Link>
         <div className="w-10" />
       </header>
 
@@ -57,7 +59,9 @@ export const AdminLayout = () => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="h-16 flex items-center px-6 border-b border-border">
-            <span className="text-xl font-bold gradient-text">Sauce Admin</span>
+            <Link to="/" className="text-xl font-bold gradient-text hover:opacity-80 transition-opacity">
+              Sauce Admin
+            </Link>
           </div>
 
           {/* Navigation */}
