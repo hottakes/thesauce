@@ -9,7 +9,8 @@ import { WaitlistDashboard } from "./stages/WaitlistDashboard";
 import {
   ApplicantData,
   generateReferralCode,
-  getRandomWaitlistPosition,
+  calculateApplicantScore,
+  scoreToWaitlistPosition,
   getRandomAmbassadorType,
 } from "@/types/applicant";
 
@@ -40,7 +41,14 @@ export const IntakeFlow = () => {
   }) => {
     const ambassadorType = getRandomAmbassadorType();
     const referralCode = generateReferralCode();
-    const waitlistPosition = getRandomWaitlistPosition();
+    
+    // Calculate score and derive waitlist position
+    const score = calculateApplicantScore({
+      interests: data.interests,
+      householdSize: data.householdSize,
+      contentUploaded: data.contentUploaded,
+    });
+    const waitlistPosition = scoreToWaitlistPosition(score);
 
     setApplicantData((prev) => ({
       ...prev,
@@ -48,6 +56,7 @@ export const IntakeFlow = () => {
       ambassadorType: ambassadorType.name,
       referralCode,
       waitlistPosition,
+      points: score,
     }));
     setStage("result");
   };
@@ -60,9 +69,9 @@ export const IntakeFlow = () => {
   });
 
   const getDashboardData = () => ({
-    waitlistPosition: applicantData.waitlistPosition || getRandomWaitlistPosition(),
+    waitlistPosition: applicantData.waitlistPosition || 50,
     referralCode: applicantData.referralCode || generateReferralCode(),
-    points: applicantData.points || 0,
+    points: applicantData.points || 50,
   });
 
   return (
