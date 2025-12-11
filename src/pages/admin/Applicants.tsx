@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { Search, Filter, Download, Trash2, Eye, ChevronLeft, ChevronRight, Check, Upload, Video, Mic, Play, Image, X } from 'lucide-react';
+import { Search, Filter, Download, Trash2, Eye, ChevronLeft, ChevronRight, Check, Upload, Video, Mic, Play, Image, X, User, CheckCircle } from 'lucide-react';
 
 const STATUS_OPTIONS = ['new', 'reviewed', 'contacted', 'accepted', 'rejected'];
 
@@ -365,11 +365,50 @@ export const AdminApplicants = () => {
           </DialogHeader>
           {viewApplicant && (
             <div className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Instagram</p>
-                  <p className="font-medium">@{viewApplicant.instagram_handle}</p>
+              {/* Instagram Profile Card */}
+              <div className="flex items-center gap-4 p-4 bg-secondary rounded-lg">
+                {viewApplicant.instagram_profile_pic ? (
+                  <img
+                    src={viewApplicant.instagram_profile_pic}
+                    alt={viewApplicant.instagram_handle}
+                    className="w-16 h-16 rounded-full object-cover border-2 border-primary"
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center border-2 border-border">
+                    <User className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                )}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-semibold text-lg">@{viewApplicant.instagram_handle}</span>
+                    {viewApplicant.instagram_verified && (
+                      <CheckCircle className="w-5 h-5 text-blue-500 fill-blue-500" />
+                    )}
+                  </div>
+                  {viewApplicant.instagram_followers !== null && (
+                    <p className="text-sm text-muted-foreground">
+                      <span className="text-primary font-medium">
+                        {viewApplicant.instagram_followers >= 1000000 
+                          ? `${(viewApplicant.instagram_followers / 1000000).toFixed(1)}M` 
+                          : viewApplicant.instagram_followers >= 1000 
+                          ? `${(viewApplicant.instagram_followers / 1000).toFixed(1)}K`
+                          : viewApplicant.instagram_followers}
+                      </span>{" "}
+                      followers
+                    </p>
+                  )}
                 </div>
+                <a 
+                  href={`https://instagram.com/${viewApplicant.instagram_handle}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary hover:underline text-sm"
+                >
+                  View Profile →
+                </a>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
                   <p className="font-medium">{viewApplicant.email || '—'}</p>
@@ -381,6 +420,10 @@ export const AdminApplicants = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Age Verified</p>
                   <p className="font-medium">{viewApplicant.is_19_plus ? 'Yes' : 'No'}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Ambassador Type</p>
+                  <p className="font-medium">{viewApplicant.ambassador_type}</p>
                 </div>
               </div>
 

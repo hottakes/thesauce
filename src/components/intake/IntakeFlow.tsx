@@ -31,6 +31,9 @@ export const IntakeFlow = () => {
     school: string;
     is19Plus: boolean;
     instagramHandle: string;
+    instagramProfilePic?: string | null;
+    instagramFollowers?: number | null;
+    instagramVerified?: boolean;
   }) => {
     setApplicantData((prev) => ({ ...prev, ...data }));
     setStage("profile");
@@ -65,6 +68,9 @@ export const IntakeFlow = () => {
       school: applicantData.school!,
       is_19_plus: applicantData.is19Plus!,
       instagram_handle: applicantData.instagramHandle!,
+      instagram_profile_pic: applicantData.instagramProfilePic || null,
+      instagram_followers: applicantData.instagramFollowers || null,
+      instagram_verified: applicantData.instagramVerified || false,
       personality_traits: data.personalityTraits,
       interests: data.interests,
       household_size: data.householdSize,

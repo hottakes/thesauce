@@ -2,6 +2,9 @@ export interface ApplicantData {
   school: string;
   is19Plus: boolean;
   instagramHandle: string;
+  instagramProfilePic?: string | null;
+  instagramFollowers?: number | null;
+  instagramVerified?: boolean;
   personalityTraits: string[];
   interests: string[];
   householdSize: number;

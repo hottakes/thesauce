@@ -1,1 +1,4 @@
 project_id = "xyyjpudqpmeuxgvvlmtz"
+
+[functions.instagram-lookup]
+verify_jwt = false
