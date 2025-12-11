@@ -1,8 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ONTARIO_UNIVERSITIES } from "@/types/applicant";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { ProgressBar } from "../ProgressBar";
-import { Search, Check, Instagram } from "lucide-react";
+import { Search, Check, Instagram, Loader2 } from "lucide-react";
+
+interface School {
+  id: string;
+  name: string;
+  spots_remaining: number;
+  is_active: boolean;
+}
 
 interface QualifierStageProps {
   onComplete: (data: {
@@ -15,18 +23,33 @@ interface QualifierStageProps {
 export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
   const [step, setStep] = useState(1);
   const [school, setSchool] = useState("");
+  const [selectedSchoolData, setSelectedSchoolData] = useState<School | null>(null);
   const [is19Plus, setIs19Plus] = useState<boolean | null>(null);
   const [instagramHandle, setInstagramHandle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
 
-  const filteredSchools = ONTARIO_UNIVERSITIES.filter((s) =>
-    s.toLowerCase().includes(searchQuery.toLowerCase())
+  const { data: schools = [], isLoading: schoolsLoading } = useQuery({
+    queryKey: ['schools'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('schools')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      if (error) throw error;
+      return data as School[];
+    },
+  });
+
+  const filteredSchools = schools.filter((s) =>
+    s.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSchoolSelect = (selectedSchool: string) => {
-    setSchool(selectedSchool);
-    setSearchQuery(selectedSchool);
+  const handleSchoolSelect = (selectedSchool: School) => {
+    setSchool(selectedSchool.name);
+    setSelectedSchoolData(selectedSchool);
+    setSearchQuery(selectedSchool.name);
     setShowDropdown(false);
   };
 
@@ -81,23 +104,38 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
                   animate={{ opacity: 1, y: 0 }}
                   className="absolute top-full left-0 right-0 mt-2 glass-card rounded-2xl overflow-hidden z-50 max-h-64 overflow-y-auto"
                 >
-                  {filteredSchools.map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => handleSchoolSelect(s)}
-                      className="w-full px-4 py-3 text-left hover:bg-primary/10 transition-colors flex items-center justify-between"
-                    >
-                      <span>{s}</span>
-                      {school === s && (
-                        <Check className="w-5 h-5 text-primary" />
-                      )}
-                    </button>
-                  ))}
+                  {schoolsLoading ? (
+                    <div className="flex items-center justify-center py-4">
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : filteredSchools.length === 0 ? (
+                    <div className="px-4 py-3 text-muted-foreground text-center">
+                      No schools found
+                    </div>
+                  ) : (
+                    filteredSchools.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => handleSchoolSelect(s)}
+                        className="w-full px-4 py-3 text-left hover:bg-primary/10 transition-colors flex items-center justify-between"
+                      >
+                        <span>{s.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            {s.spots_remaining} spots
+                          </span>
+                          {school === s.name && (
+                            <Check className="w-5 h-5 text-primary" />
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  )}
                 </motion.div>
               )}
             </div>
 
-            {school && (
+            {school && selectedSchoolData && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -107,7 +145,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
                   <span className="text-primary font-medium">{school}</span>
                   {" — "}
                   <span className="text-green-400 font-semibold">
-                    12 spots remaining
+                    {selectedSchoolData.spots_remaining} spots remaining
                   </span>
                 </p>
               </motion.div>
