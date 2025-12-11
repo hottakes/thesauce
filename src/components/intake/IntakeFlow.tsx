@@ -32,6 +32,7 @@ export const IntakeFlow = () => {
     is19Plus: boolean;
     firstName: string;
     lastName: string;
+    email: string;
     instagramHandle: string;
     instagramProfilePic?: string | null;
     instagramFollowers?: number | null;
@@ -71,6 +72,7 @@ export const IntakeFlow = () => {
       is_19_plus: applicantData.is19Plus!,
       first_name: applicantData.firstName || null,
       last_name: applicantData.lastName || null,
+      email: applicantData.email || null,
       instagram_handle: applicantData.instagramHandle!,
       instagram_profile_pic: applicantData.instagramProfilePic || null,
       instagram_followers: applicantData.instagramFollowers || null,

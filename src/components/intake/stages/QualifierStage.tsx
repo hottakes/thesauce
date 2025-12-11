@@ -28,6 +28,7 @@ interface QualifierStageProps {
     is19Plus: boolean;
     firstName: string;
     lastName: string;
+    email: string;
     instagramHandle: string;
     instagramProfilePic?: string | null;
     instagramFollowers?: number | null;
@@ -42,6 +43,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
   const [is19Plus, setIs19Plus] = useState<boolean | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
   const [instagramHandle, setInstagramHandle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -108,7 +110,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
       setStep(2);
     } else if (step === 2 && is19Plus !== null) {
       setStep(3);
-    } else if (step === 3 && firstName && lastName && instagramHandle) {
+    } else if (step === 3 && firstName && lastName && email && instagramHandle) {
       // If we haven't looked up the profile yet, do it now
       if (!instagramProfile && !lookupInstagramMutation.isPending) {
         lookupInstagramMutation.mutate(instagramHandle, {
@@ -120,6 +122,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
                 is19Plus: is19Plus!,
                 firstName,
                 lastName,
+                email,
                 instagramHandle,
                 instagramProfilePic: data.profilePic,
                 instagramFollowers: data.followers,
@@ -134,6 +137,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
               is19Plus: is19Plus!,
               firstName,
               lastName,
+              email,
               instagramHandle,
             });
           },
@@ -144,6 +148,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
           is19Plus: is19Plus!,
           firstName,
           lastName,
+          email,
           instagramHandle,
           instagramProfilePic: instagramProfile.profilePic,
           instagramFollowers: instagramProfile.followers,
@@ -358,6 +363,15 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
               />
             </div>
 
+            {/* Email */}
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email address"
+              className="w-full px-4 py-4 rounded-2xl bg-secondary border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all mb-4"
+            />
+
             {/* Instagram Handle */}
             <div className="flex items-center gap-2 mb-4">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
@@ -444,7 +458,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
 
             <button
               onClick={handleContinue}
-              disabled={!firstName || !lastName || !instagramHandle || lookupInstagramMutation.isPending || (instagramProfile && !instagramProfile.found)}
+              disabled={!firstName || !lastName || !email || !instagramHandle || lookupInstagramMutation.isPending || (instagramProfile && !instagramProfile.found)}
               className="sauce-button w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {lookupInstagramMutation.isPending ? (
