@@ -21,7 +21,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
-import { Search, Filter, Download, Trash2, Eye, ChevronLeft, ChevronRight, Check, Upload } from 'lucide-react';
+import { Search, Filter, Download, Trash2, Eye, ChevronLeft, ChevronRight, Check, Upload, Video, Mic, Play, Image, X } from 'lucide-react';
 
 const STATUS_OPTIONS = ['new', 'reviewed', 'contacted', 'accepted', 'rejected'];
 
@@ -256,6 +256,8 @@ export const AdminApplicants = () => {
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Type</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Position</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Content</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Pitch</th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Applied</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Applied</th>
                   <th className="p-4"></th>
                 </tr>
@@ -263,13 +265,13 @@ export const AdminApplicants = () => {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
                       Loading...
                     </td>
                   </tr>
                 ) : applicantsData?.data.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
                       No applicants found
                     </td>
                   </tr>
@@ -296,8 +298,19 @@ export const AdminApplicants = () => {
                       <td className="p-4 text-sm text-muted-foreground">{applicant.ambassador_type}</td>
                       <td className="p-4 text-sm">#{applicant.waitlist_position}</td>
                       <td className="p-4">
-                        {applicant.content_uploaded ? (
-                          <Check className="h-4 w-4 text-green-500" />
+                        {(applicant.content_urls as string[])?.length > 0 ? (
+                          <span className="text-sm font-medium text-green-600">
+                            {(applicant.content_urls as string[]).length} files
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="p-4">
+                        {applicant.pitch_url ? (
+                          <Badge variant="secondary" className="text-xs">
+                            {applicant.pitch_type === 'video' ? '🎥 Video' : '🎤 Audio'}
+                          </Badge>
                         ) : (
                           <span className="text-muted-foreground">—</span>
                         )}
@@ -408,6 +421,46 @@ export const AdminApplicants = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Uploaded Content Section */}
+              {(viewApplicant.content_urls as string[])?.length > 0 && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">Uploaded Content ({(viewApplicant.content_urls as string[]).length} files)</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(viewApplicant.content_urls as string[]).map((url: string, idx: number) => (
+                      <div key={idx} className="relative aspect-square rounded-lg overflow-hidden bg-secondary">
+                        {url.includes('.mp4') || url.includes('.mov') || url.includes('.webm') ? (
+                          <video src={url} className="w-full h-full object-cover" />
+                        ) : (
+                          <img src={url} alt={`Content ${idx + 1}`} className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pitch Recording Section */}
+              {viewApplicant.pitch_url && (
+                <div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Pitch Recording ({viewApplicant.pitch_type === 'video' ? '🎥 Video' : '🎤 Audio'})
+                  </p>
+                  {viewApplicant.pitch_type === 'video' ? (
+                    <video
+                      src={viewApplicant.pitch_url}
+                      controls
+                      className="w-full max-w-md rounded-lg"
+                    />
+                  ) : (
+                    <audio
+                      src={viewApplicant.pitch_url}
+                      controls
+                      className="w-full max-w-md"
+                    />
+                  )}
+                </div>
+              )}
 
               <div className="grid grid-cols-3 gap-4">
                 <div>

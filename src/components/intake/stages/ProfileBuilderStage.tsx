@@ -4,7 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { TileSelector } from "../TileSelector";
 import { ProgressBar } from "../ProgressBar";
-import { Upload, Mic, Link, Users, MapPin, Sparkles, Loader2 } from "lucide-react";
+import { ContentUploader } from "../ContentUploader";
+import { PitchRecorder } from "../PitchRecorder";
+import { Link, Users, MapPin, Sparkles, Loader2, Upload } from "lucide-react";
 
 interface FormOption {
   id: string;
@@ -22,18 +24,24 @@ interface ProfileBuilderStageProps {
     sceneTypes: string[];
     sceneCustom: string;
     contentUploaded: boolean;
+    contentUrls: string[];
+    pitchUrl: string | null;
+    pitchType: 'video' | 'audio' | null;
   }) => void;
   isSaving?: boolean;
+  applicantId?: string;
 }
 
-export const ProfileBuilderStage = ({ onComplete, isSaving = false }: ProfileBuilderStageProps) => {
+export const ProfileBuilderStage = ({ onComplete, isSaving = false, applicantId }: ProfileBuilderStageProps) => {
   const [section, setSection] = useState(1);
   const [personalityTraits, setPersonalityTraits] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
   const [householdSize, setHouseholdSize] = useState(1);
   const [sceneTypes, setSceneTypes] = useState<string[]>([]);
   const [sceneCustom, setSceneCustom] = useState("");
-  const [contentUploaded, setContentUploaded] = useState(false);
+  const [contentUrls, setContentUrls] = useState<string[]>([]);
+  const [pitchUrl, setPitchUrl] = useState<string | null>(null);
+  const [pitchType, setPitchType] = useState<'video' | 'audio' | null>(null);
 
   const { data: personalityTraitsData = [], isLoading: traitsLoading } = useQuery({
     queryKey: ['personality_traits'],
@@ -116,7 +124,10 @@ export const ProfileBuilderStage = ({ onComplete, isSaving = false }: ProfileBui
         householdSize,
         sceneTypes,
         sceneCustom,
-        contentUploaded,
+        contentUploaded: contentUrls.length > 0 || pitchUrl !== null,
+        contentUrls,
+        pitchUrl,
+        pitchType,
       });
     }
   };
@@ -334,35 +345,32 @@ export const ProfileBuilderStage = ({ onComplete, isSaving = false }: ProfileBui
           <motion.div
             initial={{ opacity: 0, x: 30 }}
             animate={{ opacity: 1, x: 0 }}
-            className="flex-1"
+            className="flex-1 space-y-8"
           >
-            <h2 className="text-2xl font-display font-bold mb-2">
-              Show us what you've got
-            </h2>
-            <p className="text-muted-foreground mb-6">
-              This is optional, but creators who submit content get reviewed first
-            </p>
-
-            <div
-              onClick={() => setContentUploaded(true)}
-              className={`glass-card p-8 rounded-2xl mb-4 text-center cursor-pointer transition-all hover:border-primary/50 ${
-                contentUploaded ? "border-primary bg-primary/5" : ""
-              }`}
-            >
-              <Upload className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
-              <p className="font-medium mb-1">
-                {contentUploaded ? "Content ready!" : "Drop your best content"}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Images or video accepted
+            <div>
+              <h2 className="text-2xl font-display font-bold mb-2">
+                Show us what you've got
+              </h2>
+              <p className="text-muted-foreground mb-6">
+                This is optional, but creators who submit content get reviewed first
               </p>
             </div>
 
-            <div className="glass-card p-6 rounded-2xl text-center cursor-pointer hover:border-primary/50 transition-all">
-              <Mic className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="font-medium mb-1">Record a 30-second pitch</p>
-              <p className="text-sm text-muted-foreground">Optional</p>
-            </div>
+            <ContentUploader
+              applicantId={applicantId}
+              contentUrls={contentUrls}
+              onContentChange={setContentUrls}
+            />
+
+            <PitchRecorder
+              applicantId={applicantId}
+              pitchUrl={pitchUrl}
+              pitchType={pitchType}
+              onPitchChange={(url, type) => {
+                setPitchUrl(url);
+                setPitchType(type);
+              }}
+            />
           </motion.div>
         )}
       </div>
