@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import {
-  PERSONALITY_TRAITS,
-  INTERESTS,
-  SCENE_TYPES,
-} from "@/types/applicant";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { TileSelector } from "../TileSelector";
 import { ProgressBar } from "../ProgressBar";
-import { Upload, Mic, Link, Users, MapPin, Sparkles } from "lucide-react";
+import { Upload, Mic, Link, Users, MapPin, Sparkles, Loader2 } from "lucide-react";
+
+interface FormOption {
+  id: string;
+  label: string;
+  emoji: string | null;
+  is_active: boolean;
+  sort_order: number;
+}
 
 interface ProfileBuilderStageProps {
   onComplete: (data: {
@@ -29,6 +34,51 @@ export const ProfileBuilderStage = ({ onComplete, isSaving = false }: ProfileBui
   const [sceneTypes, setSceneTypes] = useState<string[]>([]);
   const [sceneCustom, setSceneCustom] = useState("");
   const [contentUploaded, setContentUploaded] = useState(false);
+
+  const { data: personalityTraitsData = [], isLoading: traitsLoading } = useQuery({
+    queryKey: ['personality_traits'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('personality_traits')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      if (error) throw error;
+      return data as FormOption[];
+    },
+  });
+
+  const { data: interestsData = [], isLoading: interestsLoading } = useQuery({
+    queryKey: ['interests'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('interests')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      if (error) throw error;
+      return data as FormOption[];
+    },
+  });
+
+  const { data: venueTypesData = [], isLoading: venuesLoading } = useQuery({
+    queryKey: ['venue_types'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('venue_types')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      if (error) throw error;
+      return data as FormOption[];
+    },
+  });
+
+  const personalityOptions = personalityTraitsData.map(t => t.emoji ? `${t.emoji} ${t.label}` : t.label);
+  const interestOptions = interestsData.map(i => i.emoji ? `${i.emoji} ${i.label}` : i.label);
+  const venueOptions = venueTypesData.map(v => v.emoji ? `${v.emoji} ${v.label}` : v.label);
+
+  const isLoading = traitsLoading || interestsLoading || venuesLoading;
 
   const toggleTrait = (trait: string) => {
     setPersonalityTraits((prev) =>
@@ -137,25 +187,33 @@ export const ProfileBuilderStage = ({ onComplete, isSaving = false }: ProfileBui
               Selected: {personalityTraits.length}/3
             </p>
 
-            <TileSelector
-              options={PERSONALITY_TRAITS}
-              selected={personalityTraits}
-              onSelect={toggleTrait}
-              maxSelect={3}
-              columns={2}
-            />
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <>
+                <TileSelector
+                  options={personalityOptions}
+                  selected={personalityTraits}
+                  onSelect={toggleTrait}
+                  maxSelect={3}
+                  columns={2}
+                />
 
-            <div className="mt-8">
-              <h3 className="text-lg font-display font-semibold mb-4">
-                What are you into?
-              </h3>
-              <TileSelector
-                options={INTERESTS}
-                selected={interests}
-                onSelect={toggleInterest}
-                columns={3}
-              />
-            </div>
+                <div className="mt-8">
+                  <h3 className="text-lg font-display font-semibold mb-4">
+                    What are you into?
+                  </h3>
+                  <TileSelector
+                    options={interestOptions}
+                    selected={interests}
+                    onSelect={toggleInterest}
+                    columns={3}
+                  />
+                </div>
+              </>
+            )}
           </motion.div>
         )}
 
@@ -243,12 +301,18 @@ export const ProfileBuilderStage = ({ onComplete, isSaving = false }: ProfileBui
               Select all that apply
             </p>
 
-            <TileSelector
-              options={SCENE_TYPES}
-              selected={sceneTypes}
-              onSelect={toggleScene}
-              columns={2}
-            />
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : (
+              <TileSelector
+                options={venueOptions}
+                selected={sceneTypes}
+                onSelect={toggleScene}
+                columns={2}
+              />
+            )}
 
             <div className="mt-6">
               <label className="text-sm text-muted-foreground mb-2 block">
