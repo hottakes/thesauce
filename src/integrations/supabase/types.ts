@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applicants: {
+        Row: {
+          ambassador_type: string
+          content_uploaded: boolean
+          created_at: string
+          email: string | null
+          household_size: number
+          id: string
+          instagram_handle: string
+          interests: string[]
+          is_19_plus: boolean
+          personality_traits: string[]
+          points: number
+          referral_code: string
+          scene_custom: string | null
+          scene_types: string[]
+          school: string
+          waitlist_position: number
+        }
+        Insert: {
+          ambassador_type: string
+          content_uploaded?: boolean
+          created_at?: string
+          email?: string | null
+          household_size?: number
+          id?: string
+          instagram_handle: string
+          interests?: string[]
+          is_19_plus?: boolean
+          personality_traits?: string[]
+          points?: number
+          referral_code: string
+          scene_custom?: string | null
+          scene_types?: string[]
+          school: string
+          waitlist_position: number
+        }
+        Update: {
+          ambassador_type?: string
+          content_uploaded?: boolean
+          created_at?: string
+          email?: string | null
+          household_size?: number
+          id?: string
+          instagram_handle?: string
+          interests?: string[]
+          is_19_plus?: boolean
+          personality_traits?: string[]
+          points?: number
+          referral_code?: string
+          scene_custom?: string | null
+          scene_types?: string[]
+          school?: string
+          waitlist_position?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

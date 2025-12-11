@@ -18,9 +18,10 @@ interface ProfileBuilderStageProps {
     sceneCustom: string;
     contentUploaded: boolean;
   }) => void;
+  isSaving?: boolean;
 }
 
-export const ProfileBuilderStage = ({ onComplete }: ProfileBuilderStageProps) => {
+export const ProfileBuilderStage = ({ onComplete, isSaving = false }: ProfileBuilderStageProps) => {
   const [section, setSection] = useState(1);
   const [personalityTraits, setPersonalityTraits] = useState<string[]>([]);
   const [interests, setInterests] = useState<string[]>([]);
@@ -302,14 +303,22 @@ export const ProfileBuilderStage = ({ onComplete }: ProfileBuilderStageProps) =>
         )}
       </div>
 
-      {/* Bottom CTA */}
       <div className="p-6 pt-4">
         <button
           onClick={handleContinue}
-          disabled={!canContinue()}
+          disabled={!canContinue() || isSaving}
           className="sauce-button w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
         >
-          {section === 4 ? "See My Results" : "Continue"}
+          {isSaving ? (
+            <span className="flex items-center justify-center gap-2">
+              <span className="w-4 h-4 border-2 border-foreground/30 border-t-foreground rounded-full animate-spin" />
+              Saving...
+            </span>
+          ) : section === 4 ? (
+            "See My Results"
+          ) : (
+            "Continue"
+          )}
         </button>
         {section > 1 && (
           <button
