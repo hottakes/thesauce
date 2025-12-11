@@ -23,6 +23,7 @@ export const IntakeFlow = () => {
   const [applicantData, setApplicantData] = useState<Partial<ApplicantData>>({
     points: 0,
   });
+  const [applicantId, setApplicantId] = useState<string | undefined>();
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
@@ -42,6 +43,9 @@ export const IntakeFlow = () => {
     sceneTypes: string[];
     sceneCustom: string;
     contentUploaded: boolean;
+    contentUrls: string[];
+    pitchUrl: string | null;
+    pitchType: 'video' | 'audio' | null;
   }) => {
     setIsSaving(true);
     
@@ -67,6 +71,9 @@ export const IntakeFlow = () => {
       scene_types: data.sceneTypes,
       scene_custom: data.sceneCustom || null,
       content_uploaded: data.contentUploaded,
+      content_urls: data.contentUrls,
+      pitch_url: data.pitchUrl,
+      pitch_type: data.pitchType,
       ambassador_type: ambassadorType.name,
       waitlist_position: waitlistPosition,
       referral_code: referralCode,
@@ -136,7 +143,11 @@ export const IntakeFlow = () => {
           <QualifierStage onComplete={handleQualifierComplete} />
         )}
         {stage === "profile" && (
-          <ProfileBuilderStage onComplete={handleProfileComplete} isSaving={isSaving} />
+          <ProfileBuilderStage 
+            onComplete={handleProfileComplete} 
+            isSaving={isSaving}
+            applicantId={applicantId}
+          />
         )}
         {stage === "result" && (
           <ResultCardStage

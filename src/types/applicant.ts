@@ -8,6 +8,9 @@ export interface ApplicantData {
   sceneTypes: string[];
   sceneCustom: string;
   contentUploaded: boolean;
+  contentUrls: string[];
+  pitchUrl: string | null;
+  pitchType: 'video' | 'audio' | null;
   ambassadorType: string;
   waitlistPosition: number;
   referralCode: string;

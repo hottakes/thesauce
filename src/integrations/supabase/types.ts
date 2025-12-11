@@ -77,6 +77,7 @@ export type Database = {
         Row: {
           ambassador_type: string
           content_uploaded: boolean
+          content_urls: Json | null
           created_at: string
           email: string | null
           household_size: number
@@ -85,6 +86,8 @@ export type Database = {
           interests: string[]
           is_19_plus: boolean
           personality_traits: string[]
+          pitch_type: string | null
+          pitch_url: string | null
           points: number
           referral_code: string
           scene_custom: string | null
@@ -96,6 +99,7 @@ export type Database = {
         Insert: {
           ambassador_type: string
           content_uploaded?: boolean
+          content_urls?: Json | null
           created_at?: string
           email?: string | null
           household_size?: number
@@ -104,6 +108,8 @@ export type Database = {
           interests?: string[]
           is_19_plus?: boolean
           personality_traits?: string[]
+          pitch_type?: string | null
+          pitch_url?: string | null
           points?: number
           referral_code: string
           scene_custom?: string | null
@@ -115,6 +121,7 @@ export type Database = {
         Update: {
           ambassador_type?: string
           content_uploaded?: boolean
+          content_urls?: Json | null
           created_at?: string
           email?: string | null
           household_size?: number
@@ -123,6 +130,8 @@ export type Database = {
           interests?: string[]
           is_19_plus?: boolean
           personality_traits?: string[]
+          pitch_type?: string | null
+          pitch_url?: string | null
           points?: number
           referral_code?: string
           scene_custom?: string | null
