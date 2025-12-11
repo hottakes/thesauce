@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ProgressBar } from "../ProgressBar";
-import { Search, Check, Instagram, Loader2 } from "lucide-react";
+import { Search, Check, Instagram, Loader2, CheckCircle, AlertCircle, User } from "lucide-react";
+import { toast } from "sonner";
 
 interface School {
   id: string;
@@ -12,11 +13,23 @@ interface School {
   is_active: boolean;
 }
 
+interface InstagramProfile {
+  found: boolean;
+  username: string;
+  profilePic: string | null;
+  followers: number | null;
+  verified: boolean;
+  error?: string;
+}
+
 interface QualifierStageProps {
   onComplete: (data: {
     school: string;
     is19Plus: boolean;
     instagramHandle: string;
+    instagramProfilePic?: string | null;
+    instagramFollowers?: number | null;
+    instagramVerified?: boolean;
   }) => void;
 }
 
@@ -28,6 +41,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
   const [instagramHandle, setInstagramHandle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
+  const [instagramProfile, setInstagramProfile] = useState<InstagramProfile | null>(null);
 
   const { data: schools = [], isLoading: schoolsLoading } = useQuery({
     queryKey: ['schools'],
@@ -42,6 +56,32 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
     },
   });
 
+  const lookupInstagramMutation = useMutation({
+    mutationFn: async (username: string): Promise<InstagramProfile> => {
+      const { data, error } = await supabase.functions.invoke('instagram-lookup', {
+        body: { username },
+      });
+      if (error) throw error;
+      return data as InstagramProfile;
+    },
+    onSuccess: (data) => {
+      setInstagramProfile(data);
+      if (!data.found) {
+        toast.error("We couldn't find that Instagram account. Please check the handle.");
+      }
+    },
+    onError: () => {
+      toast.error("Couldn't verify Instagram right now. You can still continue.");
+      setInstagramProfile({
+        found: true,
+        username: instagramHandle,
+        profilePic: null,
+        followers: null,
+        verified: false,
+      });
+    },
+  });
+
   const filteredSchools = schools.filter((s) =>
     s.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -53,14 +93,63 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
     setShowDropdown(false);
   };
 
+  const handleInstagramLookup = () => {
+    if (instagramHandle.length >= 1) {
+      lookupInstagramMutation.mutate(instagramHandle);
+    }
+  };
+
   const handleContinue = () => {
     if (step === 1 && school) {
       setStep(2);
     } else if (step === 2 && is19Plus !== null) {
       setStep(3);
     } else if (step === 3 && instagramHandle) {
-      onComplete({ school, is19Plus: is19Plus!, instagramHandle });
+      // If we haven't looked up the profile yet, do it now
+      if (!instagramProfile && !lookupInstagramMutation.isPending) {
+        lookupInstagramMutation.mutate(instagramHandle, {
+          onSuccess: (data) => {
+            setInstagramProfile(data);
+            if (data.found) {
+              onComplete({
+                school,
+                is19Plus: is19Plus!,
+                instagramHandle,
+                instagramProfilePic: data.profilePic,
+                instagramFollowers: data.followers,
+                instagramVerified: data.verified,
+              });
+            }
+          },
+          onError: () => {
+            // Continue anyway on error
+            onComplete({
+              school,
+              is19Plus: is19Plus!,
+              instagramHandle,
+            });
+          },
+        });
+      } else if (instagramProfile?.found) {
+        onComplete({
+          school,
+          is19Plus: is19Plus!,
+          instagramHandle,
+          instagramProfilePic: instagramProfile.profilePic,
+          instagramFollowers: instagramProfile.followers,
+          instagramVerified: instagramProfile.verified,
+        });
+      } else if (instagramProfile && !instagramProfile.found) {
+        toast.error("Please enter a valid Instagram handle to continue.");
+      }
     }
+  };
+
+  const formatFollowers = (count: number | null) => {
+    if (count === null) return null;
+    if (count >= 1000000) return `${(count / 1000000).toFixed(1)}M`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}K`;
+    return count.toString();
   };
 
   return (
@@ -243,25 +332,97 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
               Nothing gets posted.
             </p>
 
-            <div className="relative mb-6">
+            <div className="relative mb-4">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
                 @
               </span>
               <input
                 type="text"
                 value={instagramHandle}
-                onChange={(e) => setInstagramHandle(e.target.value.replace("@", ""))}
+                onChange={(e) => {
+                  setInstagramHandle(e.target.value.replace("@", ""));
+                  setInstagramProfile(null);
+                }}
+                onBlur={handleInstagramLookup}
                 placeholder="yourhandle"
-                className="w-full pl-10 pr-4 py-4 rounded-2xl bg-secondary border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full pl-10 pr-12 py-4 rounded-2xl bg-secondary border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               />
+              {lookupInstagramMutation.isPending && (
+                <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-muted-foreground" />
+              )}
+              {instagramProfile?.found && !lookupInstagramMutation.isPending && (
+                <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+              )}
+              {instagramProfile && !instagramProfile.found && !lookupInstagramMutation.isPending && (
+                <AlertCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive" />
+              )}
             </div>
+
+            {/* Instagram Profile Preview */}
+            {instagramProfile?.found && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-card p-4 rounded-2xl mb-6"
+              >
+                <div className="flex items-center gap-4">
+                  {instagramProfile.profilePic ? (
+                    <img
+                      src={instagramProfile.profilePic}
+                      alt={instagramProfile.username}
+                      className="w-14 h-14 rounded-full object-cover border-2 border-primary"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center border-2 border-border">
+                      <User className="w-6 h-6 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold">@{instagramProfile.username}</span>
+                      {instagramProfile.verified && (
+                        <CheckCircle className="w-4 h-4 text-blue-500 fill-blue-500" />
+                      )}
+                    </div>
+                    {instagramProfile.followers !== null && (
+                      <p className="text-sm text-muted-foreground">
+                        <span className="text-primary font-medium">
+                          {formatFollowers(instagramProfile.followers)}
+                        </span>{" "}
+                        followers
+                      </p>
+                    )}
+                  </div>
+                  <CheckCircle className="w-6 h-6 text-green-500" />
+                </div>
+              </motion.div>
+            )}
+
+            {instagramProfile && !instagramProfile.found && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="glass-card p-4 rounded-2xl mb-6 border-destructive/50"
+              >
+                <p className="text-sm text-destructive text-center">
+                  We couldn't find this Instagram account. Please check the handle and try again.
+                </p>
+              </motion.div>
+            )}
 
             <button
               onClick={handleContinue}
-              disabled={!instagramHandle}
+              disabled={!instagramHandle || lookupInstagramMutation.isPending || (instagramProfile && !instagramProfile.found)}
               className="sauce-button w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              Connect & Continue
+              {lookupInstagramMutation.isPending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Verifying...
+                </span>
+              ) : (
+                "Connect & Continue"
+              )}
             </button>
           </motion.div>
         )}

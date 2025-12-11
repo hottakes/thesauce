@@ -82,7 +82,10 @@ export type Database = {
           email: string | null
           household_size: number
           id: string
+          instagram_followers: number | null
           instagram_handle: string
+          instagram_profile_pic: string | null
+          instagram_verified: boolean | null
           interests: string[]
           is_19_plus: boolean
           personality_traits: string[]
@@ -104,7 +107,10 @@ export type Database = {
           email?: string | null
           household_size?: number
           id?: string
+          instagram_followers?: number | null
           instagram_handle: string
+          instagram_profile_pic?: string | null
+          instagram_verified?: boolean | null
           interests?: string[]
           is_19_plus?: boolean
           personality_traits?: string[]
@@ -126,7 +132,10 @@ export type Database = {
           email?: string | null
           household_size?: number
           id?: string
+          instagram_followers?: number | null
           instagram_handle?: string
+          instagram_profile_pic?: string | null
+          instagram_verified?: boolean | null
           interests?: string[]
           is_19_plus?: boolean
           personality_traits?: string[]
