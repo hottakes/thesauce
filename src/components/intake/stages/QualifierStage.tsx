@@ -26,6 +26,8 @@ interface QualifierStageProps {
   onComplete: (data: {
     school: string;
     is19Plus: boolean;
+    firstName: string;
+    lastName: string;
     instagramHandle: string;
     instagramProfilePic?: string | null;
     instagramFollowers?: number | null;
@@ -38,6 +40,8 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
   const [school, setSchool] = useState("");
   const [selectedSchoolData, setSelectedSchoolData] = useState<School | null>(null);
   const [is19Plus, setIs19Plus] = useState<boolean | null>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [instagramHandle, setInstagramHandle] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -104,7 +108,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
       setStep(2);
     } else if (step === 2 && is19Plus !== null) {
       setStep(3);
-    } else if (step === 3 && instagramHandle) {
+    } else if (step === 3 && firstName && lastName && instagramHandle) {
       // If we haven't looked up the profile yet, do it now
       if (!instagramProfile && !lookupInstagramMutation.isPending) {
         lookupInstagramMutation.mutate(instagramHandle, {
@@ -114,6 +118,8 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
               onComplete({
                 school,
                 is19Plus: is19Plus!,
+                firstName,
+                lastName,
                 instagramHandle,
                 instagramProfilePic: data.profilePic,
                 instagramFollowers: data.followers,
@@ -126,6 +132,8 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
             onComplete({
               school,
               is19Plus: is19Plus!,
+              firstName,
+              lastName,
               instagramHandle,
             });
           },
@@ -134,6 +142,8 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
         onComplete({
           school,
           is19Plus: is19Plus!,
+          firstName,
+          lastName,
           instagramHandle,
           instagramProfilePic: instagramProfile.profilePic,
           instagramFollowers: instagramProfile.followers,
@@ -310,7 +320,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
           </motion.div>
         )}
 
-        {/* Step 3: Instagram Connect */}
+        {/* Step 3: Name & Instagram Connect */}
         {step === 3 && (
           <motion.div
             initial={{ opacity: 0, x: 30 }}
@@ -319,43 +329,65 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
           >
             <div className="flex justify-center mb-6">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <Instagram className="w-8 h-8" />
+                <User className="w-8 h-8" />
               </div>
             </div>
 
             <h2 className="text-2xl font-display font-bold mb-2 text-center">
-              Let's see your social game
+              Let's get to know you
             </h2>
             <p className="text-muted-foreground text-center mb-8">
-              We'll verify your profile and pull some stats.
-              <br />
-              Nothing gets posted.
+              Tell us your name and connect your socials.
             </p>
 
-            <div className="relative mb-4">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
-                @
-              </span>
+            {/* Name Fields */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <input
                 type="text"
-                value={instagramHandle}
-                onChange={(e) => {
-                  setInstagramHandle(e.target.value.replace("@", ""));
-                  setInstagramProfile(null);
-                }}
-                onBlur={handleInstagramLookup}
-                placeholder="yourhandle"
-                className="w-full pl-10 pr-12 py-4 rounded-2xl bg-secondary border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First name"
+                className="w-full px-4 py-4 rounded-2xl bg-secondary border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
               />
-              {lookupInstagramMutation.isPending && (
-                <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-muted-foreground" />
-              )}
-              {instagramProfile?.found && !lookupInstagramMutation.isPending && (
-                <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
-              )}
-              {instagramProfile && !instagramProfile.found && !lookupInstagramMutation.isPending && (
-                <AlertCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive" />
-              )}
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last name"
+                className="w-full px-4 py-4 rounded-2xl bg-secondary border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+            </div>
+
+            {/* Instagram Handle */}
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0">
+                <Instagram className="w-5 h-5" />
+              </div>
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-medium">
+                  @
+                </span>
+                <input
+                  type="text"
+                  value={instagramHandle}
+                  onChange={(e) => {
+                    setInstagramHandle(e.target.value.replace("@", ""));
+                    setInstagramProfile(null);
+                  }}
+                  onBlur={handleInstagramLookup}
+                  placeholder="yourhandle"
+                  className="w-full pl-10 pr-12 py-4 rounded-2xl bg-secondary border border-border focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                />
+                {lookupInstagramMutation.isPending && (
+                  <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 animate-spin text-muted-foreground" />
+                )}
+                {instagramProfile?.found && !lookupInstagramMutation.isPending && (
+                  <CheckCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-green-500" />
+                )}
+                {instagramProfile && !instagramProfile.found && !lookupInstagramMutation.isPending && (
+                  <AlertCircle className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-destructive" />
+                )}
+              </div>
             </div>
 
             {/* Instagram Profile Preview */}
@@ -412,7 +444,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
 
             <button
               onClick={handleContinue}
-              disabled={!instagramHandle || lookupInstagramMutation.isPending || (instagramProfile && !instagramProfile.found)}
+              disabled={!firstName || !lastName || !instagramHandle || lookupInstagramMutation.isPending || (instagramProfile && !instagramProfile.found)}
               className="sauce-button w-full disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {lookupInstagramMutation.isPending ? (

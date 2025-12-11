@@ -30,6 +30,8 @@ export const IntakeFlow = () => {
   const handleQualifierComplete = (data: {
     school: string;
     is19Plus: boolean;
+    firstName: string;
+    lastName: string;
     instagramHandle: string;
     instagramProfilePic?: string | null;
     instagramFollowers?: number | null;
@@ -67,6 +69,8 @@ export const IntakeFlow = () => {
     const completeData = {
       school: applicantData.school!,
       is_19_plus: applicantData.is19Plus!,
+      first_name: applicantData.firstName || null,
+      last_name: applicantData.lastName || null,
       instagram_handle: applicantData.instagramHandle!,
       instagram_profile_pic: applicantData.instagramProfilePic || null,
       instagram_followers: applicantData.instagramFollowers || null,
