@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { SocialProofTicker } from "../SocialProofTicker";
 import { BrandLogos } from "../BrandLogos";
+import { LiveActivityTicker } from "../LiveActivityTicker";
 import { ONTARIO_UNIVERSITIES } from "@/types/applicant";
 import { ChevronDown } from "lucide-react";
 
@@ -11,6 +12,8 @@ interface LandingStageProps {
 export const LandingStage = ({ onStart }: LandingStageProps) => {
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Live Activity Ticker */}
+      <LiveActivityTicker />
       {/* Hero Section */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <motion.div
