@@ -80,6 +80,7 @@ export type Database = {
           content_urls: Json | null
           created_at: string
           email: string | null
+          first_name: string | null
           household_size: number
           id: string
           instagram_followers: number | null
@@ -88,6 +89,7 @@ export type Database = {
           instagram_verified: boolean | null
           interests: string[]
           is_19_plus: boolean
+          last_name: string | null
           personality_traits: string[]
           pitch_type: string | null
           pitch_url: string | null
@@ -105,6 +107,7 @@ export type Database = {
           content_urls?: Json | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           household_size?: number
           id?: string
           instagram_followers?: number | null
@@ -113,6 +116,7 @@ export type Database = {
           instagram_verified?: boolean | null
           interests?: string[]
           is_19_plus?: boolean
+          last_name?: string | null
           personality_traits?: string[]
           pitch_type?: string | null
           pitch_url?: string | null
@@ -130,6 +134,7 @@ export type Database = {
           content_urls?: Json | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           household_size?: number
           id?: string
           instagram_followers?: number | null
@@ -138,6 +143,7 @@ export type Database = {
           instagram_verified?: boolean | null
           interests?: string[]
           is_19_plus?: boolean
+          last_name?: string | null
           personality_traits?: string[]
           pitch_type?: string | null
           pitch_url?: string | null

@@ -1,6 +1,8 @@
 export interface ApplicantData {
   school: string;
   is19Plus: boolean;
+  firstName: string;
+  lastName: string;
   instagramHandle: string;
   instagramProfilePic?: string | null;
   instagramFollowers?: number | null;

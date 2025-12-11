@@ -250,6 +250,7 @@ export const AdminApplicants = () => {
                       onCheckedChange={handleSelectAll}
                     />
                   </th>
+                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Name</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Instagram</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">School</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Status</th>
@@ -258,20 +259,19 @@ export const AdminApplicants = () => {
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Content</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Pitch</th>
                   <th className="text-left p-4 text-sm font-medium text-muted-foreground">Applied</th>
-                  <th className="text-left p-4 text-sm font-medium text-muted-foreground">Applied</th>
                   <th className="p-4"></th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={11} className="p-8 text-center text-muted-foreground">
                       Loading...
                     </td>
                   </tr>
                 ) : applicantsData?.data.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="p-8 text-center text-muted-foreground">
+                    <td colSpan={11} className="p-8 text-center text-muted-foreground">
                       No applicants found
                     </td>
                   </tr>
@@ -288,7 +288,12 @@ export const AdminApplicants = () => {
                           onCheckedChange={() => handleSelect(applicant.id)}
                         />
                       </td>
-                      <td className="p-4 text-sm font-medium">@{applicant.instagram_handle}</td>
+                      <td className="p-4 text-sm font-medium">
+                        {applicant.first_name || applicant.last_name 
+                          ? `${applicant.first_name || ''} ${applicant.last_name || ''}`.trim()
+                          : '—'}
+                      </td>
+                      <td className="p-4 text-sm">@{applicant.instagram_handle}</td>
                       <td className="p-4 text-sm text-muted-foreground">{applicant.school}</td>
                       <td className="p-4">
                         <Badge variant={applicant.status === 'accepted' ? 'default' : 'secondary'}>
@@ -409,6 +414,14 @@ export const AdminApplicants = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Name</p>
+                  <p className="font-medium">
+                    {viewApplicant.first_name || viewApplicant.last_name 
+                      ? `${viewApplicant.first_name || ''} ${viewApplicant.last_name || ''}`.trim()
+                      : '—'}
+                  </p>
+                </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Email</p>
                   <p className="font-medium">{viewApplicant.email || '—'}</p>
