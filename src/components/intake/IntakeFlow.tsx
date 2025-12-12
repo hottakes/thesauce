@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { AnimatedBackground } from "./AnimatedBackground";
 import { StageWrapper } from "./StageWrapper";
 import { LandingStage } from "./stages/LandingStage";
 import { QualifierStage } from "./stages/QualifierStage";
 import { ProfileBuilderStage } from "./stages/ProfileBuilderStage";
 import { ResultCardStage } from "./stages/ResultCardStage";
-import { WaitlistDashboard } from "./stages/WaitlistDashboard";
+import { AccountCreationStage } from "./stages/AccountCreationStage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -16,7 +17,7 @@ import {
   scoreToWaitlistPosition,
 } from "@/types/applicant";
 
-type Stage = "landing" | "qualifier" | "profile" | "result" | "dashboard";
+type Stage = "landing" | "qualifier" | "profile" | "result" | "account";
 
 interface AmbassadorType {
   id: string;
@@ -46,7 +47,9 @@ export const IntakeFlow = () => {
   const [selectedAmbassadorType, setSelectedAmbassadorType] = useState<AmbassadorType | null>(null);
   const [applicantId, setApplicantId] = useState<string | undefined>();
   const [isSaving, setIsSaving] = useState(false);
+  const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { data: ambassadorTypes, isLoading: ambassadorTypesLoading } = useQuery({
     queryKey: ["ambassador_types"],
@@ -153,7 +156,7 @@ export const IntakeFlow = () => {
         return;
       }
 
-      // Store the applicant ID for challenge tracking
+      // Store the applicant ID for account linking
       setApplicantId(insertedData.id);
 
       // Update local state and proceed
@@ -178,6 +181,92 @@ export const IntakeFlow = () => {
     }
   };
 
+  const handleAccountCreate = async (password: string) => {
+    if (!applicantId || !applicantData.email) {
+      toast({
+        title: "Error",
+        description: "Missing application data. Please try again.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCreatingAccount(true);
+
+    try {
+      // Create the auth account
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: applicantData.email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/portal`,
+        },
+      });
+
+      if (signUpError) {
+        // Check for specific error types
+        if (signUpError.message.includes('already registered')) {
+          toast({
+            title: "Account Exists",
+            description: "An account with this email already exists. Please log in to the portal instead.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Account Creation Failed",
+            description: signUpError.message,
+            variant: "destructive",
+          });
+        }
+        setIsCreatingAccount(false);
+        return;
+      }
+
+      if (!signUpData.user) {
+        toast({
+          title: "Error",
+          description: "Failed to create account. Please try again.",
+          variant: "destructive",
+        });
+        setIsCreatingAccount(false);
+        return;
+      }
+
+      // Link the applicant record to the new user
+      const { error: updateError } = await supabase
+        .from('applicants')
+        .update({ user_id: signUpData.user.id })
+        .eq('id', applicantId);
+
+      if (updateError) {
+        console.error('Error linking applicant to user:', updateError);
+        // Account was created but linking failed - still allow portal access
+        toast({
+          title: "Warning",
+          description: "Account created but there was an issue linking your application. Please contact support.",
+          variant: "default",
+        });
+      }
+
+      toast({
+        title: "Welcome to Sauce! 🧃",
+        description: "Your account has been created successfully.",
+      });
+
+      // Navigate to portal
+      navigate('/portal', { replace: true });
+    } catch (err) {
+      console.error('Error creating account:', err);
+      toast({
+        title: "Connection Error",
+        description: "Please check your internet connection and try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCreatingAccount(false);
+    }
+  };
+
   const getResultCardData = () => ({
     instagramHandle: applicantData.instagramHandle || "user",
     householdSize: applicantData.householdSize || 1,
@@ -185,13 +274,6 @@ export const IntakeFlow = () => {
     ambassadorType: selectedAmbassadorType 
       ? { name: selectedAmbassadorType.name, description: selectedAmbassadorType.description }
       : { name: "Ambassador", description: "Welcome to the Sauce crew!" },
-  });
-
-  const getDashboardData = () => ({
-    applicantId: applicantId,
-    waitlistPosition: applicantData.waitlistPosition || 50,
-    referralCode: applicantData.referralCode || generateReferralCode(),
-    points: applicantData.points || 50,
   });
 
   return (
@@ -215,11 +297,15 @@ export const IntakeFlow = () => {
         {stage === "result" && (
           <ResultCardStage
             data={getResultCardData()}
-            onContinue={() => setStage("dashboard")}
+            onContinue={() => setStage("account")}
           />
         )}
-        {stage === "dashboard" && (
-          <WaitlistDashboard data={getDashboardData()} />
+        {stage === "account" && (
+          <AccountCreationStage
+            email={applicantData.email || ''}
+            onComplete={handleAccountCreate}
+            isCreating={isCreatingAccount}
+          />
         )}
       </StageWrapper>
     </div>
