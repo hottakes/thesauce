@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { AnimatedBackground } from "./AnimatedBackground";
@@ -50,6 +50,12 @@ export const IntakeFlow = () => {
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  // Sign out any existing session when starting the intake flow
+  // This ensures a clean state for new applicants
+  useEffect(() => {
+    supabase.auth.signOut();
+  }, []);
 
   const { data: ambassadorTypes, isLoading: ambassadorTypesLoading } = useQuery({
     queryKey: ["ambassador_types"],
