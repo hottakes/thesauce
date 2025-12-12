@@ -1,10 +1,13 @@
 import { motion } from "framer-motion";
 import { Link, ExternalLink, CheckCircle2, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 interface WaitlistDashboardProps {
   data: {
+    applicantId?: string;
     waitlistPosition: number;
     referralCode: string;
     points: number;
@@ -12,7 +15,10 @@ interface WaitlistDashboardProps {
 }
 
 export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
-  const progress = Math.min((data.points / 100) * 100, 100);
+  const [currentPoints, setCurrentPoints] = useState(data.points);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const progress = Math.min((currentPoints / 100) * 100, 100);
 
   const { data: challenges, isLoading: challengesLoading } = useQuery({
     queryKey: ["challenges"],
@@ -26,6 +32,102 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
       return data;
     },
   });
+
+  const { data: completions } = useQuery({
+    queryKey: ["challenge_completions", data.applicantId],
+    queryFn: async () => {
+      if (!data.applicantId) return [];
+      const { data: completionData, error } = await supabase
+        .from("challenge_completions")
+        .select("challenge_id")
+        .eq("applicant_id", data.applicantId);
+      if (error) throw error;
+      return completionData?.map(c => c.challenge_id) || [];
+    },
+    enabled: !!data.applicantId,
+  });
+
+  const completeChallenge = useMutation({
+    mutationFn: async ({ challengeId, points }: { challengeId: string; points: number }) => {
+      if (!data.applicantId) throw new Error("No applicant ID");
+      
+      // Insert completion record
+      const { error: completionError } = await supabase
+        .from("challenge_completions")
+        .insert({
+          applicant_id: data.applicantId,
+          challenge_id: challengeId,
+        });
+      
+      if (completionError) {
+        if (completionError.code === '23505') {
+          throw new Error("Already completed");
+        }
+        throw completionError;
+      }
+
+      // Update applicant points
+      const newPoints = currentPoints + points;
+      const { error: updateError } = await supabase
+        .from("applicants")
+        .update({ points: newPoints })
+        .eq("id", data.applicantId);
+      
+      if (updateError) throw updateError;
+      
+      return { newPoints };
+    },
+    onSuccess: ({ newPoints }) => {
+      setCurrentPoints(newPoints);
+      queryClient.invalidateQueries({ queryKey: ["challenge_completions", data.applicantId] });
+      toast({
+        title: "Challenge completed! 🎉",
+        description: `You earned more spots on the waitlist!`,
+      });
+    },
+    onError: (error: any) => {
+      if (error.message === "Already completed") {
+        toast({
+          title: "Already done!",
+          description: "You've already completed this challenge.",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "Couldn't complete challenge. Try again.",
+          variant: "destructive",
+        });
+      }
+    },
+  });
+
+  const handleChallengeClick = (challenge: { id: string; points: number; external_url: string | null }) => {
+    const isCompleted = completions?.includes(challenge.id);
+    
+    if (isCompleted) {
+      // Already completed, just open external URL if present
+      if (challenge.external_url) {
+        window.open(challenge.external_url, "_blank", "noopener,noreferrer");
+      }
+      return;
+    }
+
+    // Mark as completed
+    completeChallenge.mutate({ challengeId: challenge.id, points: challenge.points });
+    
+    // Open external URL if present
+    if (challenge.external_url) {
+      window.open(challenge.external_url, "_blank", "noopener,noreferrer");
+    }
+  };
+
+  const copyReferralLink = () => {
+    navigator.clipboard.writeText(`sauce.app/join/${data.referralCode}`);
+    toast({
+      title: "Copied!",
+      description: "Referral link copied to clipboard.",
+    });
+  };
 
   return (
     <div className="min-h-screen px-6 py-8">
@@ -57,7 +159,7 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
         <div className="flex items-center justify-between mb-3">
           <span className="text-sm font-medium">Progress to Top 10</span>
           <span className="text-sm text-muted-foreground">
-            {data.points}/100 points
+            {currentPoints}/100 points
           </span>
         </div>
         <div className="h-3 bg-secondary rounded-full overflow-hidden">
@@ -88,10 +190,7 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
         ) : (
           <div className="space-y-3">
             {challenges?.map((challenge, index) => {
-              const ChallengeWrapper = challenge.external_url ? "a" : "div";
-              const wrapperProps = challenge.external_url
-                ? { href: challenge.external_url, target: "_blank", rel: "noopener noreferrer" }
-                : {};
+              const isCompleted = completions?.includes(challenge.id);
               
               return (
                 <motion.div
@@ -100,17 +199,26 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3 + index * 0.1 }}
                 >
-                  <ChallengeWrapper
-                    {...wrapperProps}
-                    className="glass-card p-4 rounded-xl flex items-center gap-4 block"
+                  <button
+                    onClick={() => handleChallengeClick(challenge)}
+                    disabled={completeChallenge.isPending}
+                    className={`glass-card p-4 rounded-xl flex items-center gap-4 w-full text-left transition-all ${
+                      isCompleted ? "opacity-60" : "hover:scale-[1.02]"
+                    }`}
                   >
                     <span className="text-2xl">{challenge.icon || "🎯"}</span>
                     <div className="flex-1">
-                      <p className="font-medium text-sm">{challenge.title}</p>
+                      <p className={`font-medium text-sm ${isCompleted ? "line-through" : ""}`}>
+                        {challenge.title}
+                      </p>
                       <p className="text-xs text-primary">+{challenge.points} spots</p>
                     </div>
-                    <ExternalLink className="w-5 h-5 text-muted-foreground" />
-                  </ChallengeWrapper>
+                    {isCompleted ? (
+                      <CheckCircle2 className="w-6 h-6 text-green-500" />
+                    ) : (
+                      <ExternalLink className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </button>
                 </motion.div>
               );
             })}
@@ -136,7 +244,10 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
             readOnly
             className="flex-1 px-3 py-2 rounded-xl bg-background border border-border text-sm truncate"
           />
-          <button className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap">
+          <button 
+            onClick={copyReferralLink}
+            className="px-4 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-medium whitespace-nowrap"
+          >
             Copy
           </button>
         </div>

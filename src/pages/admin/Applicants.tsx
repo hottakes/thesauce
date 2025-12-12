@@ -25,6 +25,74 @@ import { Search, Filter, Download, Trash2, Eye, ChevronLeft, ChevronRight, Check
 
 const STATUS_OPTIONS = ['new', 'reviewed', 'contacted', 'accepted', 'rejected'];
 
+// Component to show completed challenges for an applicant
+const CompletedChallengesSection = ({ applicantId }: { applicantId: string }) => {
+  const { data: completions, isLoading } = useQuery({
+    queryKey: ['admin-challenge-completions', applicantId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('challenge_completions')
+        .select(`
+          id,
+          completed_at,
+          verified,
+          challenge_id,
+          challenges (
+            title,
+            points,
+            icon
+          )
+        `)
+        .eq('applicant_id', applicantId);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div>
+        <p className="text-sm text-muted-foreground mb-2">Completed Challenges</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!completions || completions.length === 0) {
+    return (
+      <div>
+        <p className="text-sm text-muted-foreground mb-2">Completed Challenges</p>
+        <p className="text-sm text-muted-foreground italic">No challenges completed yet</p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <p className="text-sm text-muted-foreground mb-2">Completed Challenges ({completions.length})</p>
+      <div className="space-y-2">
+        {completions.map((completion: any) => (
+          <div 
+            key={completion.id} 
+            className="flex items-center gap-3 p-2 bg-secondary/50 rounded-lg"
+          >
+            <span className="text-lg">{completion.challenges?.icon || '🎯'}</span>
+            <div className="flex-1">
+              <p className="text-sm font-medium">{completion.challenges?.title}</p>
+              <p className="text-xs text-muted-foreground">
+                +{completion.challenges?.points} pts • {format(parseISO(completion.completed_at), 'MMM d, h:mm a')}
+              </p>
+            </div>
+            {completion.verified && (
+              <Badge variant="default" className="text-xs">Verified</Badge>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export const AdminApplicants = () => {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -517,6 +585,9 @@ export const AdminApplicants = () => {
                   )}
                 </div>
               )}
+
+              {/* Completed Challenges Section */}
+              <CompletedChallengesSection applicantId={viewApplicant.id} />
 
               <div className="grid grid-cols-3 gap-4">
                 <div>
