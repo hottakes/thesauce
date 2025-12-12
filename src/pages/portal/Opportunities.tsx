@@ -22,6 +22,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { OpportunitiesSkeleton } from '@/components/portal/PortalSkeleton';
 import { PortalError } from '@/components/portal/PortalError';
+import { PortalEmpty } from '@/components/portal/PortalEmpty';
 
 type Opportunity = Tables<'opportunities'>;
 type OpportunityApplication = Tables<'opportunity_applications'>;
