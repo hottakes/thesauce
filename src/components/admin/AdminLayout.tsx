@@ -34,8 +34,16 @@ export const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleSignOut = async () => {
-    await signOut();
-    navigate('/admin/login');
+    try {
+      console.log('Signing out...');
+      await signOut();
+      console.log('Sign out successful, navigating to login');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    } finally {
+      // Always navigate to login, even if signOut fails
+      navigate('/admin/login', { replace: true });
+    }
   };
 
   return (
