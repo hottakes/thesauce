@@ -9,6 +9,7 @@ import {
   Palette,
   Trophy,
   Crown,
+  Briefcase,
   Settings,
   LogOut,
   Menu,
@@ -19,6 +20,7 @@ import { cn } from '@/lib/utils';
 const navItems = [
   { to: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
   { to: '/admin/applicants', icon: Users, label: 'Applicants' },
+  { to: '/admin/opportunities', icon: Briefcase, label: 'Opportunities' },
   { to: '/admin/schools', icon: GraduationCap, label: 'Schools' },
   { to: '/admin/form-builder', icon: Palette, label: 'Form Builder' },
   { to: '/admin/challenges', icon: Trophy, label: 'Challenges' },
