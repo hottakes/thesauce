@@ -59,7 +59,13 @@ import { toast } from '@/hooks/use-toast';
 type Opportunity = Tables<'opportunities'>;
 type School = Tables<'schools'>;
 
-const OPPORTUNITY_TYPES = ['Sampling', 'Events', 'Content', 'Tabling', 'Promotions'];
+const OPPORTUNITY_TYPES = [
+  { value: 'sampling', label: 'Sampling' },
+  { value: 'event', label: 'Event' },
+  { value: 'content', label: 'Content' },
+  { value: 'tabling', label: 'Tabling' },
+  { value: 'promotion', label: 'Promotion' },
+];
 const STATUSES = ['draft', 'active', 'completed', 'cancelled'];
 
 const statusStyles: Record<string, string> = {
@@ -72,7 +78,7 @@ const statusStyles: Record<string, string> = {
 const emptyOpportunity = {
   title: '',
   brand_name: '',
-  opportunity_type: 'Sampling',
+  opportunity_type: 'sampling',
   status: 'draft',
   short_description: '',
   description: '',
@@ -422,7 +428,7 @@ export const AdminOpportunities: React.FC = () => {
           <SelectContent>
             <SelectItem value="all">All Types</SelectItem>
             {OPPORTUNITY_TYPES.map((type) => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
+              <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -608,7 +614,7 @@ export const AdminOpportunities: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {OPPORTUNITY_TYPES.map((type) => (
-                      <SelectItem key={type} value={type}>{type}</SelectItem>
+                      <SelectItem key={type.value} value={type.value}>{type.label}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
