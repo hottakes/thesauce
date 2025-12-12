@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  Briefcase, Plus, Search, Edit, Trash2, 
+  Briefcase, Plus, Search, Edit, Trash2, Users,
   MoreHorizontal, Upload, X, Image as ImageIcon
 } from 'lucide-react';
+import { OpportunityApplicationsDrawer } from '@/components/admin/OpportunityApplicationsDrawer';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
@@ -99,6 +100,8 @@ export const AdminOpportunities: React.FC = () => {
   const [formData, setFormData] = useState(emptyOpportunity);
   const [requirements, setRequirements] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [applicationsDrawerOpen, setApplicationsDrawerOpen] = useState(false);
+  const [applicationsOpportunity, setApplicationsOpportunity] = useState<Opportunity | null>(null);
 
   // Fetch opportunities
   const { data: opportunities = [], isLoading } = useQuery({
@@ -492,6 +495,13 @@ export const AdminOpportunities: React.FC = () => {
                         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); handleOpenEdit(opportunity); }}>
                           <Edit className="w-4 h-4 mr-2" /> Edit
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={(e) => { 
+                          e.stopPropagation(); 
+                          setApplicationsOpportunity(opportunity);
+                          setApplicationsDrawerOpen(true);
+                        }}>
+                          <Users className="w-4 h-4 mr-2" /> View Applications
+                        </DropdownMenuItem>
                         <DropdownMenuItem 
                           onClick={(e) => { e.stopPropagation(); handleDelete(opportunity); }}
                           className="text-destructive"
@@ -814,6 +824,16 @@ export const AdminOpportunities: React.FC = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Applications Drawer */}
+      <OpportunityApplicationsDrawer
+        opportunity={applicationsOpportunity}
+        open={applicationsDrawerOpen}
+        onClose={() => {
+          setApplicationsDrawerOpen(false);
+          setApplicationsOpportunity(null);
+        }}
+      />
     </div>
   );
 };
