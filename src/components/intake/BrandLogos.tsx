@@ -6,12 +6,12 @@ import redbullLogo from "@/assets/brands/redbull.png";
 import spotifyLogo from "@/assets/brands/spotify.png";
 
 const brandLogos = [
-  { name: 'Monster Energy', src: monsterLogo, height: 'h-6 md:h-8' },
-  { name: 'Smirnoff', src: smirnoffLogo, height: 'h-8 md:h-10' },
-  { name: 'GymShark', src: gymsharkLogo, height: 'h-5 md:h-6' },
-  { name: 'Prime', src: primeLogo, height: 'h-8 md:h-10' },
-  { name: 'Red Bull', src: redbullLogo, height: 'h-10 md:h-12' },
-  { name: 'Spotify', src: spotifyLogo, height: 'h-6 md:h-8' },
+  { name: 'Monster Energy', src: monsterLogo, height: 'h-8 md:h-10' },
+  { name: 'Smirnoff', src: smirnoffLogo, height: 'h-10 md:h-12' },
+  { name: 'GymShark', src: gymsharkLogo, height: 'h-8 md:h-10' },
+  { name: 'Prime', src: primeLogo, height: 'h-10 md:h-14' },
+  { name: 'Red Bull', src: redbullLogo, height: 'h-12 md:h-16' },
+  { name: 'Spotify', src: spotifyLogo, height: 'h-8 md:h-10' },
 ];
 
 export const BrandLogos = () => {
@@ -26,7 +26,7 @@ export const BrandLogos = () => {
             key={brand.name}
             src={brand.src}
             alt={brand.name}
-            className={`${brand.height} w-auto grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300 object-contain`}
+            className={`${brand.height} w-auto object-contain`}
           />
         ))}
       </div>
