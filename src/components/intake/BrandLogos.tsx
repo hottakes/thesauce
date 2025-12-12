@@ -7,10 +7,10 @@ import spotifyLogo from "@/assets/brands/spotify.png";
 
 const brandLogos = [
   { name: 'Monster Energy', src: monsterLogo, height: 'h-12 md:h-14' },
-  { name: 'Smirnoff', src: smirnoffLogo, height: 'h-14 md:h-16' },
+  { name: 'Smirnoff', src: smirnoffLogo, height: 'h-16 md:h-20' },
   { name: 'GymShark', src: gymsharkLogo, height: 'h-8 md:h-10' },
   { name: 'Prime', src: primeLogo, height: 'h-10 md:h-14' },
-  { name: 'Red Bull', src: redbullLogo, height: 'h-16 md:h-20' },
+  { name: 'Red Bull', src: redbullLogo, height: 'h-20 md:h-24' },
   { name: 'Spotify', src: spotifyLogo, height: 'h-8 md:h-10' },
 ];
 
