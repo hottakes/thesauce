@@ -147,10 +147,14 @@ export const LandingStage = ({ onStart }: LandingStageProps) => {
           {/* CTA Button */}
           <motion.button
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            whileHover={{ scale: 1.1, y: -2, transition: { type: "spring", stiffness: 400, damping: 17 } }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            whileHover={{ scale: 1.1, y: -2 }}
             whileTap={{ scale: 0.96 }}
-            transition={{ delay: 0.5 }}
+            transition={{ 
+              delay: 0.5,
+              scale: { type: "spring", stiffness: 500, damping: 15 },
+              y: { type: "spring", stiffness: 500, damping: 15 }
+            }}
             onClick={onStart}
             className="sauce-button w-full max-w-xs pulse-glow"
           >
