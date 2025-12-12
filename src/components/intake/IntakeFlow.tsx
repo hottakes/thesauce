@@ -222,7 +222,7 @@ export const IntakeFlow = () => {
         return;
       }
 
-      if (!signUpData.user) {
+      if (!signUpData.user || !signUpData.session) {
         toast({
           title: "Error",
           description: "Failed to create account. Please try again.",
@@ -232,15 +232,13 @@ export const IntakeFlow = () => {
         return;
       }
 
-      // Link the applicant record to the new user
-      const { error: updateError } = await supabase
-        .from('applicants')
-        .update({ user_id: signUpData.user.id })
-        .eq('id', applicantId);
+      // Use edge function to link applicant record (bypasses RLS with service role)
+      const { error: linkError } = await supabase.functions.invoke('link-applicant', {
+        body: { applicantId },
+      });
 
-      if (updateError) {
-        console.error('Error linking applicant to user:', updateError);
-        // Account was created but linking failed - still allow portal access
+      if (linkError) {
+        console.error('Error linking applicant to user:', linkError);
         toast({
           title: "Warning",
           description: "Account created but there was an issue linking your application. Please contact support.",
