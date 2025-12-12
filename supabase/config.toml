@@ -2,3 +2,6 @@ project_id = "xyyjpudqpmeuxgvvlmtz"
 
 [functions.instagram-lookup]
 verify_jwt = false
+
+[functions.link-applicant]
+verify_jwt = false
