@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
-  Briefcase, Plus, Search, Edit, Trash2, Users, 
-  Calendar, MapPin, Filter, MoreHorizontal
+  Briefcase, Plus, Search, Edit, Trash2, 
+  MoreHorizontal, Upload, X, Image as ImageIcon
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Table,
   TableBody,
@@ -55,8 +56,9 @@ import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 
 type Opportunity = Tables<'opportunities'>;
+type School = Tables<'schools'>;
 
-const OPPORTUNITY_TYPES = ['Sampling', 'Events', 'Content', 'Promotions'];
+const OPPORTUNITY_TYPES = ['Sampling', 'Events', 'Content', 'Tabling', 'Promotions'];
 const STATUSES = ['draft', 'active', 'completed', 'cancelled'];
 
 const statusStyles: Record<string, string> = {
@@ -87,6 +89,7 @@ const emptyOpportunity = {
 
 export const AdminOpportunities: React.FC = () => {
   const queryClient = useQueryClient();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
@@ -94,9 +97,10 @@ export const AdminOpportunities: React.FC = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [formData, setFormData] = useState(emptyOpportunity);
-  const [requirementsText, setRequirementsText] = useState('');
+  const [requirements, setRequirements] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
-  // Fetch opportunities with application counts
+  // Fetch opportunities
   const { data: opportunities = [], isLoading } = useQuery({
     queryKey: ['admin-opportunities'],
     queryFn: async () => {
@@ -106,6 +110,20 @@ export const AdminOpportunities: React.FC = () => {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as Opportunity[];
+    },
+  });
+
+  // Fetch schools for multi-select
+  const { data: schools = [] } = useQuery({
+    queryKey: ['schools-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('schools')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      if (error) throw error;
+      return data as School[];
     },
   });
 
@@ -174,6 +192,12 @@ export const AdminOpportunities: React.FC = () => {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
+      // First delete related applications
+      await supabase
+        .from('opportunity_applications')
+        .delete()
+        .eq('opportunity_id', id);
+      
       const { error } = await supabase
         .from('opportunities')
         .delete()
@@ -182,7 +206,9 @@ export const AdminOpportunities: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-opportunities'] });
+      queryClient.invalidateQueries({ queryKey: ['opportunity-application-counts'] });
       setDeleteDialogOpen(false);
+      setEditModalOpen(false);
       toast({ title: 'Opportunity deleted' });
     },
     onError: (error: Error) => {
@@ -211,7 +237,7 @@ export const AdminOpportunities: React.FC = () => {
   const handleOpenCreate = () => {
     setSelectedOpportunity(null);
     setFormData(emptyOpportunity);
-    setRequirementsText('');
+    setRequirements([]);
     setEditModalOpen(true);
   };
 
@@ -235,7 +261,7 @@ export const AdminOpportunities: React.FC = () => {
       schools: opportunity.schools || [],
       brand_logo_url: opportunity.brand_logo_url || '',
     });
-    setRequirementsText((opportunity.requirements || []).join('\n'));
+    setRequirements(opportunity.requirements || []);
     setEditModalOpen(true);
   };
 
@@ -244,15 +270,10 @@ export const AdminOpportunities: React.FC = () => {
       toast({ title: 'Title and Brand Name are required', variant: 'destructive' });
       return;
     }
-    
-    const requirements = requirementsText
-      .split('\n')
-      .map((r) => r.trim())
-      .filter((r) => r.length > 0);
 
     saveMutation.mutate({
       ...formData,
-      requirements,
+      requirements: requirements.filter((r) => r.trim().length > 0),
       id: selectedOpportunity?.id,
     });
   };
@@ -260,6 +281,65 @@ export const AdminOpportunities: React.FC = () => {
   const handleDelete = (opportunity: Opportunity) => {
     setSelectedOpportunity(opportunity);
     setDeleteDialogOpen(true);
+  };
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({ title: 'Please upload an image file', variant: 'destructive' });
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: 'Image must be less than 5MB', variant: 'destructive' });
+      return;
+    }
+
+    setIsUploading(true);
+    const filename = `brand-logos/${Date.now()}_${file.name}`;
+    
+    const { data, error } = await supabase.storage
+      .from('applicant-content')
+      .upload(filename, file);
+
+    if (error) {
+      toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+      setIsUploading(false);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('applicant-content')
+      .getPublicUrl(filename);
+
+    setFormData({ ...formData, brand_logo_url: urlData.publicUrl });
+    setIsUploading(false);
+    toast({ title: 'Logo uploaded' });
+  };
+
+  const toggleSchool = (schoolName: string) => {
+    const current = formData.schools;
+    if (current.includes(schoolName)) {
+      setFormData({ ...formData, schools: current.filter((s) => s !== schoolName) });
+    } else {
+      setFormData({ ...formData, schools: [...current, schoolName] });
+    }
+  };
+
+  const addRequirement = () => {
+    setRequirements([...requirements, '']);
+  };
+
+  const updateRequirement = (index: number, value: string) => {
+    const updated = [...requirements];
+    updated[index] = value;
+    setRequirements(updated);
+  };
+
+  const removeRequirement = (index: number) => {
+    setRequirements(requirements.filter((_, i) => i !== index));
   };
 
   const formatDateRange = (start: string | null, end: string | null) => {
@@ -441,6 +521,50 @@ export const AdminOpportunities: React.FC = () => {
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
+            {/* Brand Logo Upload */}
+            <div className="space-y-2">
+              <Label>Brand Logo</Label>
+              <div className="flex items-center gap-4">
+                {formData.brand_logo_url ? (
+                  <div className="relative w-16 h-16">
+                    <img 
+                      src={formData.brand_logo_url} 
+                      alt="Brand logo" 
+                      className="w-16 h-16 rounded-lg object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, brand_logo_url: '' })}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-lg bg-muted/50 border border-dashed border-border flex items-center justify-center">
+                    <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                  </div>
+                )}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {isUploading ? 'Uploading...' : 'Upload Logo'}
+                </Button>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Title *</Label>
@@ -500,13 +624,15 @@ export const AdminOpportunities: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="short_description">Short Description</Label>
+              <Label htmlFor="short_description">Short Description (max 100 chars)</Label>
               <Input
                 id="short_description"
                 value={formData.short_description}
-                onChange={(e) => setFormData({ ...formData, short_description: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, short_description: e.target.value.slice(0, 100) })}
                 placeholder="Brief one-line description"
+                maxLength={100}
               />
+              <p className="text-xs text-muted-foreground">{formData.short_description.length}/100</p>
             </div>
 
             <div className="space-y-2">
@@ -539,6 +665,28 @@ export const AdminOpportunities: React.FC = () => {
                   placeholder="Toronto, ON"
                 />
               </div>
+            </div>
+
+            {/* Schools Multi-select */}
+            <div className="space-y-2">
+              <Label>Schools (leave empty for all schools)</Label>
+              <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border border-border rounded-lg bg-muted/20">
+                {schools.map((school) => (
+                  <label
+                    key={school.id}
+                    className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
+                  >
+                    <Checkbox
+                      checked={formData.schools.includes(school.name)}
+                      onCheckedChange={() => toggleSchool(school.name)}
+                    />
+                    <span className="truncate">{school.name}</span>
+                  </label>
+                ))}
+              </div>
+              {formData.schools.length > 0 && (
+                <p className="text-xs text-muted-foreground">{formData.schools.length} school(s) selected</p>
+              )}
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -583,25 +731,37 @@ export const AdminOpportunities: React.FC = () => {
               </div>
             </div>
 
+            {/* Dynamic Requirements */}
             <div className="space-y-2">
-              <Label htmlFor="requirements">Requirements (one per line)</Label>
-              <Textarea
-                id="requirements"
-                value={requirementsText}
-                onChange={(e) => setRequirementsText(e.target.value)}
-                placeholder="Must be 19+&#10;Active on social media&#10;Available weekends"
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="brand_logo_url">Brand Logo URL</Label>
-              <Input
-                id="brand_logo_url"
-                value={formData.brand_logo_url}
-                onChange={(e) => setFormData({ ...formData, brand_logo_url: e.target.value })}
-                placeholder="https://..."
-              />
+              <div className="flex items-center justify-between">
+                <Label>Requirements</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addRequirement}>
+                  <Plus className="w-3 h-3 mr-1" /> Add
+                </Button>
+              </div>
+              <div className="space-y-2">
+                {requirements.map((req, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <Input
+                      value={req}
+                      onChange={(e) => updateRequirement(index, e.target.value)}
+                      placeholder="e.g., Must be 19+"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removeRequirement(index)}
+                      className="shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  </div>
+                ))}
+                {requirements.length === 0 && (
+                  <p className="text-sm text-muted-foreground">No requirements added</p>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
@@ -613,7 +773,17 @@ export const AdminOpportunities: React.FC = () => {
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            {selectedOpportunity && (
+              <Button 
+                variant="destructive" 
+                onClick={() => handleDelete(selectedOpportunity)}
+                className="sm:mr-auto"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete
+              </Button>
+            )}
             <Button variant="outline" onClick={() => setEditModalOpen(false)}>
               Cancel
             </Button>
@@ -630,7 +800,7 @@ export const AdminOpportunities: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Opportunity?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{selectedOpportunity?.title}". This action cannot be undone.
+              This will permanently delete "{selectedOpportunity?.title}" and all related applications. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
