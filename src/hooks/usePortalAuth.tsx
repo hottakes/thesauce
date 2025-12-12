@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Tables } from '@/integrations/supabase/types';
+import { useNavigate } from 'react-router-dom';
+import { toast } from '@/hooks/use-toast';
 
 type Applicant = Tables<'applicants'>;
 
@@ -10,7 +12,9 @@ interface PortalAuthContextType {
   user: User | null;
   applicant: Applicant | null;
   isLoading: boolean;
+  error: Error | null;
   signOut: () => Promise<void>;
+  refetchApplicant: () => Promise<void>;
 }
 
 const PortalAuthContext = createContext<PortalAuthContextType | undefined>(undefined);
@@ -20,18 +24,66 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [user, setUser] = useState<User | null>(null);
   const [applicant, setApplicant] = useState<Applicant | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchApplicant = useCallback(async (userId: string) => {
+    try {
+      setError(null);
+      const { data, error: fetchError } = await supabase
+        .from('applicants')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error fetching applicant:', fetchError);
+        setError(new Error(fetchError.message));
+      }
+      
+      setApplicant(data);
+    } catch (err) {
+      console.error('Error fetching applicant:', err);
+      setError(err instanceof Error ? err : new Error('Failed to fetch applicant'));
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  const refetchApplicant = useCallback(async () => {
+    if (user?.id) {
+      await fetchApplicant(user.id);
+    }
+  }, [user?.id, fetchApplicant]);
 
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+      (event, currentSession) => {
+        // Handle session expiry
+        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !currentSession) {
+          setSession(null);
+          setUser(null);
+          setApplicant(null);
+          setIsLoading(false);
+          
+          // Show session expired message
+          if (event === 'SIGNED_OUT' && session) {
+            toast({
+              title: 'Session expired',
+              description: 'Your session has expired. Please sign in again.',
+              variant: 'destructive',
+            });
+          }
+          return;
+        }
+
+        setSession(currentSession);
+        setUser(currentSession?.user ?? null);
         
         // Defer applicant fetch to avoid deadlock
-        if (session?.user) {
+        if (currentSession?.user) {
           setTimeout(() => {
-            fetchApplicant(session.user.id);
+            fetchApplicant(currentSession.user.id);
           }, 0);
         } else {
           setApplicant(null);
@@ -41,39 +93,19 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
+    supabase.auth.getSession().then(({ data: { session: existingSession } }) => {
+      setSession(existingSession);
+      setUser(existingSession?.user ?? null);
       
-      if (session?.user) {
-        fetchApplicant(session.user.id);
+      if (existingSession?.user) {
+        fetchApplicant(existingSession.user.id);
       } else {
         setIsLoading(false);
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchApplicant = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('applicants')
-        .select('*')
-        .eq('user_id', userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching applicant:', error);
-      }
-      
-      setApplicant(data);
-    } catch (error) {
-      console.error('Error fetching applicant:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [fetchApplicant]);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -83,7 +115,7 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   };
 
   return (
-    <PortalAuthContext.Provider value={{ session, user, applicant, isLoading, signOut }}>
+    <PortalAuthContext.Provider value={{ session, user, applicant, isLoading, error, signOut, refetchApplicant }}>
       {children}
     </PortalAuthContext.Provider>
   );

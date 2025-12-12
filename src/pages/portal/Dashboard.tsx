@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { usePortalAuth } from '@/hooks/usePortalAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { motion } from 'framer-motion';
 import { 
   User, 
   Trophy, 
@@ -12,13 +13,14 @@ import {
   ArrowRight, 
   Briefcase,
   Clock,
-  MapPin,
   DollarSign,
   Sparkles,
   CheckCircle2,
-  Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { DashboardSkeleton } from '@/components/portal/PortalSkeleton';
+import { PortalError } from '@/components/portal/PortalError';
+import { PortalEmpty } from '@/components/portal/PortalEmpty';
 
 const statusConfig = {
   new: {
@@ -58,8 +60,22 @@ const statusConfig = {
   },
 };
 
+// Animation variants
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+};
+
 export const PortalDashboard: React.FC = () => {
-  const { applicant } = usePortalAuth();
+  const { applicant, isLoading: authLoading } = usePortalAuth();
 
   const { data: completionsCount = 0 } = useQuery({
     queryKey: ['portal_completions_count', applicant?.id],
@@ -75,7 +91,7 @@ export const PortalDashboard: React.FC = () => {
     enabled: !!applicant?.id,
   });
 
-  const { data: opportunities = [], isLoading: oppsLoading } = useQuery({
+  const { data: opportunities = [], isLoading: oppsLoading, error: oppsError, refetch: refetchOpps } = useQuery({
     queryKey: ['featured_opportunities'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -90,12 +106,11 @@ export const PortalDashboard: React.FC = () => {
     },
   });
 
-  const { data: incompleteChallenges = [], isLoading: challengesLoading } = useQuery({
+  const { data: incompleteChallenges = [], isLoading: challengesLoading, error: challengesError, refetch: refetchChallenges } = useQuery({
     queryKey: ['portal_incomplete_challenges', applicant?.id],
     queryFn: async () => {
       if (!applicant?.id) return [];
       
-      // Get completed challenge IDs
       const { data: completions } = await supabase
         .from('challenge_completions')
         .select('challenge_id')
@@ -103,7 +118,6 @@ export const PortalDashboard: React.FC = () => {
       
       const completedIds = completions?.map(c => c.challenge_id) || [];
       
-      // Get active challenges not completed
       let query = supabase
         .from('challenges')
         .select('*')
@@ -126,11 +140,32 @@ export const PortalDashboard: React.FC = () => {
   const config = statusConfig[status] || statusConfig.new;
   const isApproved = status === 'accepted';
   const showPosition = status === 'new' || status === 'reviewed';
+  const isLoading = authLoading || oppsLoading || challengesLoading;
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
+  if (oppsError || challengesError) {
+    return (
+      <PortalError 
+        onRetry={() => {
+          refetchOpps();
+          refetchChallenges();
+        }}
+      />
+    );
+  }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <motion.div 
+      className="space-y-6 max-w-4xl"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Welcome Section */}
-      <div className="flex items-center gap-4">
+      <motion.div className="flex items-center gap-4" variants={itemVariants}>
         {applicant?.instagram_profile_pic ? (
           <img
             src={applicant.instagram_profile_pic}
@@ -150,10 +185,10 @@ export const PortalDashboard: React.FC = () => {
             Here's what's happening with your application
           </p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Status Card */}
-      <div className={cn('glass-card p-6 border-2', config.bg)}>
+      <motion.div className={cn('glass-card p-6 border-2', config.bg)} variants={itemVariants}>
         <div className="flex items-start gap-4">
           <div className={cn('p-3 rounded-xl bg-background/50', config.icon)}>
             {status === 'accepted' ? (
@@ -185,10 +220,10 @@ export const PortalDashboard: React.FC = () => {
         <div className="mt-4 pt-4 border-t border-border/50 text-xs text-muted-foreground">
           Applied {applicant?.created_at ? format(new Date(applicant.created_at), 'MMMM d, yyyy') : 'recently'}
         </div>
-      </div>
+      </motion.div>
 
       {/* Quick Stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <motion.div className="grid grid-cols-3 gap-3" variants={itemVariants}>
         <div className="glass-card p-4 text-center">
           <Trophy className="w-5 h-5 text-primary mx-auto mb-2" />
           <p className="text-2xl font-bold">
@@ -206,10 +241,10 @@ export const PortalDashboard: React.FC = () => {
           <p className="text-2xl font-bold">{completionsCount}</p>
           <p className="text-xs text-muted-foreground">Boosts Completed</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Live Opportunities */}
-      <section>
+      <motion.section variants={itemVariants}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold flex items-center gap-2">
             🔥 Live Opportunities
@@ -222,21 +257,17 @@ export const PortalDashboard: React.FC = () => {
           </Link>
         </div>
         
-        {oppsLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : opportunities.length === 0 ? (
-          <div className="glass-card p-6 text-center text-muted-foreground">
-            <Briefcase className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No live opportunities right now. Check back soon!</p>
-          </div>
+        {opportunities.length === 0 ? (
+          <PortalEmpty type="coming-soon" />
         ) : (
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-2 px-2 md:grid md:grid-cols-3 md:overflow-visible">
-            {opportunities.map((opp) => (
-              <div
+            {opportunities.map((opp, index) => (
+              <motion.div
                 key={opp.id}
-                className="relative flex-shrink-0 w-64 md:w-auto glass-card p-4 rounded-xl"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="relative flex-shrink-0 w-64 md:w-auto glass-card p-4 rounded-xl hover:bg-card/70 transition-colors"
               >
                 {!isApproved && (
                   <div className="absolute inset-0 bg-background/80 backdrop-blur-sm rounded-xl flex flex-col items-center justify-center z-10">
@@ -274,14 +305,14 @@ export const PortalDashboard: React.FC = () => {
                     </span>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
-      </section>
+      </motion.section>
 
       {/* Boosts Preview */}
-      <section>
+      <motion.section variants={itemVariants}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold flex items-center gap-2">
             ⚡ Boost Your Position
@@ -294,34 +325,33 @@ export const PortalDashboard: React.FC = () => {
           </Link>
         </div>
 
-        {challengesLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : incompleteChallenges.length === 0 ? (
-          <div className="glass-card p-6 text-center text-muted-foreground">
-            <CheckCircle2 className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>You've completed all available boosts! 🎉</p>
-          </div>
+        {incompleteChallenges.length === 0 ? (
+          <PortalEmpty type="boosts-complete" />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {incompleteChallenges.map((challenge) => (
-              <Link
+            {incompleteChallenges.map((challenge, index) => (
+              <motion.div
                 key={challenge.id}
-                to="/portal/boosts"
-                className="glass-card p-4 rounded-xl flex items-center gap-3 hover:bg-card/70 transition-colors"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
               >
-                <span className="text-2xl">{challenge.icon || '🎯'}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm truncate">{challenge.title}</p>
-                  <p className="text-xs text-primary">+{challenge.points} points</p>
-                </div>
-                <ArrowRight className="w-4 h-4 text-muted-foreground" />
-              </Link>
+                <Link
+                  to="/portal/boosts"
+                  className="glass-card p-4 rounded-xl flex items-center gap-3 hover:bg-card/70 transition-all hover:scale-[1.02]"
+                >
+                  <span className="text-2xl">{challenge.icon || '🎯'}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm truncate">{challenge.title}</p>
+                    <p className="text-xs text-primary">+{challenge.points} points</p>
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-muted-foreground" />
+                </Link>
+              </motion.div>
             ))}
           </div>
         )}
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>
   );
 };
