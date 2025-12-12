@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
-import { Link, ExternalLink, CheckCircle2 } from "lucide-react";
+import { Link, ExternalLink, CheckCircle2, Loader2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WaitlistDashboardProps {
   data: {
@@ -9,35 +11,21 @@ interface WaitlistDashboardProps {
   };
 }
 
-const CHALLENGES = [
-  {
-    title: "Follow @getsauce on TikTok",
-    points: 5,
-    icon: "📱",
-    completed: false,
-  },
-  {
-    title: "Post a story tagging @getsauce",
-    points: 10,
-    icon: "📸",
-    completed: false,
-  },
-  {
-    title: "Refer a friend who applies",
-    points: 20,
-    icon: "👥",
-    completed: false,
-  },
-  {
-    title: "Complete the Brand Quiz",
-    points: 10,
-    icon: "🎯",
-    completed: false,
-  },
-];
-
 export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
   const progress = Math.min((data.points / 100) * 100, 100);
+
+  const { data: challenges, isLoading: challengesLoading } = useQuery({
+    queryKey: ["challenges"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("challenges")
+        .select("id, title, description, points, icon, external_url")
+        .eq("is_active", true)
+        .order("sort_order");
+      if (error) throw error;
+      return data;
+    },
+  });
 
   return (
     <div className="min-h-screen px-6 py-8">
@@ -93,28 +81,41 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
         <h2 className="text-lg font-display font-semibold mb-4">
           🚀 Boost your spot
         </h2>
-        <div className="space-y-3">
-          {CHALLENGES.map((challenge, index) => (
-            <motion.div
-              key={challenge.title}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + index * 0.1 }}
-              className="glass-card p-4 rounded-xl flex items-center gap-4"
-            >
-              <span className="text-2xl">{challenge.icon}</span>
-              <div className="flex-1">
-                <p className="font-medium text-sm">{challenge.title}</p>
-                <p className="text-xs text-primary">+{challenge.points} spots</p>
-              </div>
-              {challenge.completed ? (
-                <CheckCircle2 className="w-6 h-6 text-green-500" />
-              ) : (
-                <ExternalLink className="w-5 h-5 text-muted-foreground" />
-              )}
-            </motion.div>
-          ))}
-        </div>
+        {challengesLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {challenges?.map((challenge, index) => {
+              const ChallengeWrapper = challenge.external_url ? "a" : "div";
+              const wrapperProps = challenge.external_url
+                ? { href: challenge.external_url, target: "_blank", rel: "noopener noreferrer" }
+                : {};
+              
+              return (
+                <motion.div
+                  key={challenge.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3 + index * 0.1 }}
+                >
+                  <ChallengeWrapper
+                    {...wrapperProps}
+                    className="glass-card p-4 rounded-xl flex items-center gap-4 block"
+                  >
+                    <span className="text-2xl">{challenge.icon || "🎯"}</span>
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">{challenge.title}</p>
+                      <p className="text-xs text-primary">+{challenge.points} spots</p>
+                    </div>
+                    <ExternalLink className="w-5 h-5 text-muted-foreground" />
+                  </ChallengeWrapper>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </motion.div>
 
       {/* Referral Link */}
