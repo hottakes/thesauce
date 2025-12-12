@@ -70,14 +70,11 @@ export const SCENE_TYPES = [
   "Gaming lounges",
 ];
 
-export const AMBASSADOR_TYPES = [
-  { name: "The Connector", description: "You know everyone and everyone knows you. Perfect for word-of-mouth campaigns." },
-  { name: "The Content King", description: "Your feed is fire. Brands need your creative eye for scroll-stopping content." },
-  { name: "The Party Starter", description: "Where you go, the party follows. Ideal for event activations and nightlife campaigns." },
-  { name: "The Hype Machine", description: "You bring the energy. Your enthusiasm is contagious and brands love that." },
-  { name: "The Trendsetter", description: "You're always ahead of the curve. Brands want your stamp of approval." },
-  { name: "The Insider", description: "You've got the inside scoop. Perfect for exclusive launches and VIP experiences." },
-];
+// Legacy constant - kept for reference but now fetched from database
+// export const AMBASSADOR_TYPES = [
+//   { name: "The Connector", description: "You know everyone and everyone knows you. Perfect for word-of-mouth campaigns." },
+//   ...
+// ];
 
 export const generateReferralCode = (): string => {
   return `SAUCE${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
@@ -123,8 +120,4 @@ export const scoreToWaitlistPosition = (score: number): number => {
   // Add small random factor for uniqueness
   const randomOffset = Math.floor(Math.random() * 5) - 2;
   return Math.max(1, Math.min(100, position + randomOffset));
-};
-
-export const getRandomAmbassadorType = (): typeof AMBASSADOR_TYPES[0] => {
-  return AMBASSADOR_TYPES[Math.floor(Math.random() * AMBASSADOR_TYPES.length)];
 };

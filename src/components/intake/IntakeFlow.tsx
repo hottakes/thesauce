@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { AnimatedBackground } from "./AnimatedBackground";
 import { StageWrapper } from "./StageWrapper";
 import { LandingStage } from "./stages/LandingStage";
@@ -13,19 +14,51 @@ import {
   generateReferralCode,
   calculateApplicantScore,
   scoreToWaitlistPosition,
-  getRandomAmbassadorType,
 } from "@/types/applicant";
 
 type Stage = "landing" | "qualifier" | "profile" | "result" | "dashboard";
+
+interface AmbassadorType {
+  id: string;
+  name: string;
+  description: string;
+  assignment_weight: number;
+}
+
+const getWeightedRandomAmbassadorType = (types: AmbassadorType[]): AmbassadorType => {
+  const totalWeight = types.reduce((sum, t) => sum + t.assignment_weight, 0);
+  let random = Math.random() * totalWeight;
+  
+  for (const type of types) {
+    random -= type.assignment_weight;
+    if (random <= 0) {
+      return type;
+    }
+  }
+  return types[0];
+};
 
 export const IntakeFlow = () => {
   const [stage, setStage] = useState<Stage>("landing");
   const [applicantData, setApplicantData] = useState<Partial<ApplicantData>>({
     points: 0,
   });
+  const [selectedAmbassadorType, setSelectedAmbassadorType] = useState<AmbassadorType | null>(null);
   const [applicantId, setApplicantId] = useState<string | undefined>();
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+
+  const { data: ambassadorTypes, isLoading: ambassadorTypesLoading } = useQuery({
+    queryKey: ["ambassador_types"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("ambassador_types")
+        .select("id, name, description, assignment_weight")
+        .eq("is_active", true);
+      if (error) throw error;
+      return data as AmbassadorType[];
+    },
+  });
 
   const handleQualifierComplete = (data: {
     school: string;
@@ -53,9 +86,19 @@ export const IntakeFlow = () => {
     pitchUrl: string | null;
     pitchType: 'video' | 'audio' | null;
   }) => {
+    if (!ambassadorTypes || ambassadorTypes.length === 0) {
+      toast({
+        title: "Loading...",
+        description: "Please wait while we prepare your results.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSaving(true);
     
-    const ambassadorType = getRandomAmbassadorType();
+    const ambassadorType = getWeightedRandomAmbassadorType(ambassadorTypes);
+    setSelectedAmbassadorType(ambassadorType);
     const referralCode = generateReferralCode();
     
     // Calculate score and derive waitlist position
@@ -134,7 +177,9 @@ export const IntakeFlow = () => {
     instagramHandle: applicantData.instagramHandle || "user",
     householdSize: applicantData.householdSize || 1,
     personalityTraits: applicantData.personalityTraits || [],
-    ambassadorType: getRandomAmbassadorType(),
+    ambassadorType: selectedAmbassadorType 
+      ? { name: selectedAmbassadorType.name, description: selectedAmbassadorType.description }
+      : { name: "Ambassador", description: "Welcome to the Sauce crew!" },
   });
 
   const getDashboardData = () => ({
@@ -157,7 +202,7 @@ export const IntakeFlow = () => {
         {stage === "profile" && (
           <ProfileBuilderStage 
             onComplete={handleProfileComplete} 
-            isSaving={isSaving}
+            isSaving={isSaving || ambassadorTypesLoading}
             applicantId={applicantId}
           />
         )}
