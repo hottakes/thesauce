@@ -48,13 +48,18 @@ export const IntakeFlow = () => {
   const [applicantId, setApplicantId] = useState<string | undefined>();
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
   // Sign out any existing session when starting the intake flow
   // This ensures a clean state for new applicants
   useEffect(() => {
-    supabase.auth.signOut();
+    const clearSession = async () => {
+      await supabase.auth.signOut();
+      setIsReady(true);
+    };
+    clearSession();
   }, []);
 
   const { data: ambassadorTypes, isLoading: ambassadorTypesLoading } = useQuery({
@@ -67,6 +72,7 @@ export const IntakeFlow = () => {
       if (error) throw error;
       return data as AmbassadorType[];
     },
+    enabled: isReady, // Only fetch after session is cleared
   });
 
   const handleQualifierComplete = (data: {
