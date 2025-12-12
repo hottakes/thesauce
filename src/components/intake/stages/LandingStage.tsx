@@ -148,7 +148,14 @@ export const LandingStage = ({ onStart }: LandingStageProps) => {
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
+            whileHover={{ scale: 1.1, y: -2 }}
+            whileTap={{ scale: 0.96 }}
+            transition={{ 
+              delay: 0.5,
+              type: "spring",
+              stiffness: 400,
+              damping: 17
+            }}
             onClick={onStart}
             className="sauce-button w-full max-w-xs pulse-glow"
           >
