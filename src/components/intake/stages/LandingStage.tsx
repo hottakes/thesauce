@@ -1,19 +1,78 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { SocialProofTicker } from "../SocialProofTicker";
 import { BrandLogos } from "../BrandLogos";
 import { LiveActivityTicker } from "../LiveActivityTicker";
 import { ONTARIO_UNIVERSITIES } from "@/types/applicant";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ArrowRight } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 interface LandingStageProps {
   onStart: () => void;
 }
 
 export const LandingStage = ({ onStart }: LandingStageProps) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsLoggedIn(!!session);
+      setIsLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
+      setIsLoggedIn(!!session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   return (
     <div className="min-h-screen flex flex-col">
+      {/* Header Bar */}
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="fixed top-0 left-0 right-0 z-50 px-4 py-3"
+      >
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2">
+            <span className="text-2xl">🧃</span>
+            <span className="font-display font-bold text-lg text-foreground">Sauce</span>
+          </Link>
+
+          {/* Sign In / Dashboard Button */}
+          {!isLoading && (
+            <Link to={isLoggedIn ? "/portal" : "/portal/login"}>
+              <Button 
+                variant="ghost" 
+                size="sm"
+                className="text-muted-foreground hover:text-foreground border border-border/50 hover:border-border hover:bg-card/50"
+              >
+                {isLoggedIn ? (
+                  <>
+                    Dashboard
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </Button>
+            </Link>
+          )}
+        </div>
+      </motion.header>
+
       {/* Live Activity Ticker */}
-      <LiveActivityTicker />
+      <div className="pt-14">
+        <LiveActivityTicker />
+      </div>
+
       {/* Hero Section */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
         <motion.div
