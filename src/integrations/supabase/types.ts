@@ -76,6 +76,7 @@ export type Database = {
       applicants: {
         Row: {
           ambassador_type: string
+          approved_at: string | null
           content_uploaded: boolean
           content_urls: Json | null
           created_at: string
@@ -95,14 +96,17 @@ export type Database = {
           pitch_url: string | null
           points: number
           referral_code: string
+          rejected_at: string | null
           scene_custom: string | null
           scene_types: string[]
           school: string
           status: string
+          user_id: string | null
           waitlist_position: number
         }
         Insert: {
           ambassador_type: string
+          approved_at?: string | null
           content_uploaded?: boolean
           content_urls?: Json | null
           created_at?: string
@@ -122,14 +126,17 @@ export type Database = {
           pitch_url?: string | null
           points?: number
           referral_code: string
+          rejected_at?: string | null
           scene_custom?: string | null
           scene_types?: string[]
           school: string
           status?: string
+          user_id?: string | null
           waitlist_position: number
         }
         Update: {
           ambassador_type?: string
+          approved_at?: string | null
           content_uploaded?: boolean
           content_urls?: Json | null
           created_at?: string
@@ -149,10 +156,12 @@ export type Database = {
           pitch_url?: string | null
           points?: number
           referral_code?: string
+          rejected_at?: string | null
           scene_custom?: string | null
           scene_types?: string[]
           school?: string
           status?: string
+          user_id?: string | null
           waitlist_position?: number
         }
         Relationships: []
@@ -163,6 +172,7 @@ export type Database = {
           challenge_id: string
           completed_at: string
           id: string
+          proof_url: string | null
           verified: boolean
         }
         Insert: {
@@ -170,6 +180,7 @@ export type Database = {
           challenge_id: string
           completed_at?: string
           id?: string
+          proof_url?: string | null
           verified?: boolean
         }
         Update: {
@@ -177,6 +188,7 @@ export type Database = {
           challenge_id?: string
           completed_at?: string
           id?: string
+          proof_url?: string | null
           verified?: boolean
         }
         Relationships: [
@@ -261,6 +273,117 @@ export type Database = {
           sort_order?: number
         }
         Relationships: []
+      }
+      opportunities: {
+        Row: {
+          brand_logo_url: string | null
+          brand_name: string
+          compensation: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          id: string
+          is_featured: boolean | null
+          location: string | null
+          opportunity_type: string
+          requirements: string[] | null
+          schools: string[] | null
+          short_description: string | null
+          spots_filled: number | null
+          spots_total: number | null
+          start_date: string | null
+          status: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brand_logo_url?: string | null
+          brand_name: string
+          compensation?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_featured?: boolean | null
+          location?: string | null
+          opportunity_type: string
+          requirements?: string[] | null
+          schools?: string[] | null
+          short_description?: string | null
+          spots_filled?: number | null
+          spots_total?: number | null
+          start_date?: string | null
+          status?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brand_logo_url?: string | null
+          brand_name?: string
+          compensation?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          id?: string
+          is_featured?: boolean | null
+          location?: string | null
+          opportunity_type?: string
+          requirements?: string[] | null
+          schools?: string[] | null
+          short_description?: string | null
+          spots_filled?: number | null
+          spots_total?: number | null
+          start_date?: string | null
+          status?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      opportunity_applications: {
+        Row: {
+          applicant_id: string
+          applied_at: string
+          approved_at: string | null
+          id: string
+          notes: string | null
+          opportunity_id: string
+          status: string | null
+        }
+        Insert: {
+          applicant_id: string
+          applied_at?: string
+          approved_at?: string | null
+          id?: string
+          notes?: string | null
+          opportunity_id: string
+          status?: string | null
+        }
+        Update: {
+          applicant_id?: string
+          applied_at?: string
+          approved_at?: string | null
+          id?: string
+          notes?: string | null
+          opportunity_id?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_applications_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_applications_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       personality_traits: {
         Row: {
