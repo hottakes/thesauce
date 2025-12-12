@@ -37,8 +37,8 @@ const PortalSidebar: React.FC = () => {
   return (
     <aside className="hidden md:flex flex-col w-60 min-h-screen bg-card border-r border-border">
       {/* Logo */}
-      <div className="p-6 border-b border-border">
-        <img src="/logo-white.png" alt="Sauce" className="h-8 w-auto object-contain" />
+      <div className="p-6 pb-4 border-b border-border">
+        <img src="/logo-white.png" alt="Sauce" className="w-full max-w-[160px] h-auto object-contain" />
       </div>
 
       {/* User Info */}

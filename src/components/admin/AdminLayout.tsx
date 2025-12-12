@@ -62,7 +62,7 @@ export const AdminLayout = () => {
           {/* Logo */}
           <div className="h-16 flex items-center px-6 border-b border-border">
             <Link to="/" className="hover:opacity-80 transition-opacity">
-              <img src="/logo-white.png" alt="Sauce" className="h-8 w-auto object-contain" />
+              <img src="/logo-white.png" alt="Sauce" className="w-full max-w-[160px] h-auto object-contain" />
             </Link>
           </div>
 

@@ -40,10 +40,8 @@ export const LandingStage = ({ onStart }: LandingStageProps) => {
         className="fixed top-0 left-0 right-0 z-50 px-4 py-3"
       >
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="flex items-center">
-            <img src="/logo-white.png" alt="Sauce" className="h-8 w-auto object-contain" />
-          </Link>
+          {/* Spacer for centering */}
+          <div className="w-20" />
 
           {/* Sign In / Dashboard Button */}
           {!isLoading && (
@@ -85,9 +83,37 @@ export const LandingStage = ({ onStart }: LandingStageProps) => {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="mb-8"
+            className="mb-8 relative"
           >
-            <img src="/logo-white.png" alt="Sauce" className="h-16 w-auto object-contain mx-auto" />
+            {/* Glow effect behind logo */}
+            <motion.div
+              className="absolute inset-0 blur-3xl opacity-40"
+              style={{
+                background: "radial-gradient(circle, hsl(var(--sauce-orange)) 0%, transparent 70%)",
+              }}
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: [0.3, 0.5, 0.3],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
+            <motion.img 
+              src="/logo-white.png" 
+              alt="Sauce" 
+              className="h-24 w-auto object-contain mx-auto relative z-10" 
+              animate={{
+                y: [0, -5, 0],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+            />
           </motion.div>
 
           {/* Headlines */}
