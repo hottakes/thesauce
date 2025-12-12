@@ -18,6 +18,7 @@ import { AdminFormBuilder } from "./pages/admin/FormBuilder";
 import { AdminChallenges } from "./pages/admin/Challenges";
 import { AdminAmbassadorTypes } from "./pages/admin/AmbassadorTypes";
 import { AdminSettings } from "./pages/admin/Settings";
+import { AdminOpportunities } from "./pages/admin/Opportunities";
 
 // Portal imports
 import { PortalLogin } from "./pages/portal/Login";
@@ -55,6 +56,7 @@ const App = () => (
               <Route path="form-builder" element={<AdminFormBuilder />} />
               <Route path="challenges" element={<AdminChallenges />} />
               <Route path="ambassador-types" element={<AdminAmbassadorTypes />} />
+              <Route path="opportunities" element={<AdminOpportunities />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
             
