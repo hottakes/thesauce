@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { Briefcase, Lock, MapPin, Calendar, Users, Check, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +20,8 @@ import {
   DrawerClose,
 } from '@/components/ui/drawer';
 import { toast } from '@/hooks/use-toast';
+import { OpportunitiesSkeleton } from '@/components/portal/PortalSkeleton';
+import { PortalError } from '@/components/portal/PortalError';
 
 type Opportunity = Tables<'opportunities'>;
 type OpportunityApplication = Tables<'opportunity_applications'>;
@@ -32,6 +35,16 @@ const typeBadgeColors: Record<string, string> = {
   Promotions: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+};
+
 export const PortalOpportunities: React.FC = () => {
   const { applicant } = usePortalAuth();
   const queryClient = useQueryClient();
@@ -42,7 +55,7 @@ export const PortalOpportunities: React.FC = () => {
   const isApproved = applicant?.status === 'accepted';
 
   // Fetch opportunities
-  const { data: opportunities = [], isLoading } = useQuery({
+  const { data: opportunities = [], isLoading, error, refetch } = useQuery({
     queryKey: ['opportunities', activeFilter],
     queryFn: async () => {
       let query = supabase
@@ -142,10 +155,23 @@ export const PortalOpportunities: React.FC = () => {
     return ((filled || 0) / total) * 100;
   };
 
+  if (isLoading) {
+    return <OpportunitiesSkeleton />;
+  }
+
+  if (error) {
+    return <PortalError onRetry={refetch} />;
+  }
+
   return (
-    <div className="space-y-6">
+    <motion.div 
+      className="space-y-6"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
       {/* Header */}
-      <div>
+      <motion.div variants={itemVariants}>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Briefcase className="w-6 h-6 text-primary" />
           Opportunities
@@ -155,60 +181,53 @@ export const PortalOpportunities: React.FC = () => {
             ? "Apply to campaigns that match your vibe"
             : "Get approved to unlock exclusive opportunities"}
         </p>
-      </div>
+      </motion.div>
 
       {/* Filter Tabs */}
-      <ScrollArea className="w-full">
-        <div className="flex gap-2 pb-2">
-          {OPPORTUNITY_TYPES.map((type) => (
-            <Button
-              key={type}
-              variant={activeFilter === type ? "default" : "outline"}
-              size="sm"
-              onClick={() => setActiveFilter(type)}
-              className={activeFilter === type 
-                ? "bg-primary text-primary-foreground" 
-                : "bg-card/50 border-border/50 text-muted-foreground hover:text-foreground"
-              }
-            >
-              {type}
-            </Button>
-          ))}
-        </div>
-        <ScrollBar orientation="horizontal" />
-      </ScrollArea>
+      <motion.div variants={itemVariants}>
+        <ScrollArea className="w-full">
+          <div className="flex gap-2 pb-2">
+            {OPPORTUNITY_TYPES.map((type) => (
+              <Button
+                key={type}
+                variant={activeFilter === type ? "default" : "outline"}
+                size="sm"
+                onClick={() => setActiveFilter(type)}
+                className={activeFilter === type 
+                  ? "bg-primary text-primary-foreground" 
+                  : "bg-card/50 border-border/50 text-muted-foreground hover:text-foreground"
+                }
+              >
+                {type}
+              </Button>
+            ))}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </motion.div>
 
       {/* Opportunities Grid */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-64 bg-card/50 rounded-xl animate-pulse" />
-          ))}
-        </div>
-      ) : opportunities.length === 0 ? (
-        <div className="text-center py-16">
-          <Briefcase className="w-12 h-12 mx-auto text-muted-foreground/50 mb-4" />
-          <p className="text-muted-foreground">
-            {activeFilter === 'All'
-              ? "No opportunities available right now. Check back soon!"
-              : `No ${activeFilter.toLowerCase()} opportunities available.`}
-          </p>
-        </div>
+      {opportunities.length === 0 ? (
+        <PortalEmpty type="opportunities" />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {opportunities.map((opportunity) => {
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          variants={containerVariants}
+        >
+          {opportunities.map((opportunity, index) => {
             const eligible = isEligible(opportunity);
             const applied = hasApplied(opportunity.id);
             const locked = !isApproved;
 
             return (
-              <div
+              <motion.div
                 key={opportunity.id}
+                variants={itemVariants}
                 onClick={() => handleCardClick(opportunity)}
                 className={`relative bg-card/50 backdrop-blur-sm border border-border/50 rounded-xl p-4 transition-all ${
                   locked || !eligible
                     ? 'cursor-default'
-                    : 'cursor-pointer hover:border-primary/50 hover:bg-card/70'
+                    : 'cursor-pointer hover:border-primary/50 hover:bg-card/70 hover:scale-[1.01]'
                 }`}
               >
                 {/* Card Content */}
@@ -310,10 +329,10 @@ export const PortalOpportunities: React.FC = () => {
                     <p className="text-sm text-muted-foreground">Get approved to unlock</p>
                   </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
-        </div>
+        </motion.div>
       )}
 
       {/* Opportunity Detail Drawer */}
@@ -432,6 +451,6 @@ export const PortalOpportunities: React.FC = () => {
           )}
         </DrawerContent>
       </Drawer>
-    </div>
+    </motion.div>
   );
 };
