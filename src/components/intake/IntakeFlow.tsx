@@ -124,8 +124,12 @@ export const IntakeFlow = () => {
     });
     const waitlistPosition = scoreToWaitlistPosition(score);
 
+    // Generate UUID on client side to avoid needing SELECT after INSERT
+    const generatedId = crypto.randomUUID();
+    
     // Prepare complete applicant data
     const completeData = {
+      id: generatedId, // Use client-generated ID
       school: applicantData.school!,
       is_19_plus: applicantData.is19Plus!,
       first_name: applicantData.firstName || null,
@@ -153,13 +157,12 @@ export const IntakeFlow = () => {
     try {
       console.log('Attempting to save applicant with data:', JSON.stringify(completeData, null, 2));
       
-      const { data: insertedData, error } = await supabase
+      // Don't use .select() - just insert and use the client-generated ID
+      const { error } = await supabase
         .from('applicants')
-        .insert(completeData)
-        .select('id')
-        .single();
+        .insert(completeData);
 
-      console.log('Insert result:', { insertedData, error });
+      console.log('Insert result:', { error });
 
       if (error) {
         console.error('Error saving applicant - full error:', JSON.stringify(error, null, 2));
@@ -175,8 +178,8 @@ export const IntakeFlow = () => {
         return;
       }
 
-      // Store the applicant ID for account linking
-      setApplicantId(insertedData.id);
+      // Store the applicant ID for account linking (using our client-generated ID)
+      setApplicantId(generatedId);
 
       // Update local state and proceed
       setApplicantData((prev) => ({
