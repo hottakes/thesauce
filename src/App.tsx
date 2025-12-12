@@ -19,6 +19,11 @@ import { AdminChallenges } from "./pages/admin/Challenges";
 import { AdminAmbassadorTypes } from "./pages/admin/AmbassadorTypes";
 import { AdminSettings } from "./pages/admin/Settings";
 
+// Portal imports
+import { PortalLogin } from "./pages/portal/Login";
+import { PortalLayout } from "./components/portal/PortalLayout";
+import { PortalDashboard } from "./pages/portal/Dashboard";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -48,6 +53,12 @@ const App = () => (
               <Route path="challenges" element={<AdminChallenges />} />
               <Route path="ambassador-types" element={<AdminAmbassadorTypes />} />
               <Route path="settings" element={<AdminSettings />} />
+            </Route>
+            
+            {/* Portal Routes */}
+            <Route path="/portal/login" element={<PortalLogin />} />
+            <Route path="/portal" element={<PortalLayout />}>
+              <Route index element={<PortalDashboard />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
