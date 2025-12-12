@@ -85,7 +85,7 @@ export const PortalLogin: React.FC = () => {
       <div className="glass-card p-8 w-full max-w-md relative z-10">
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <div className="text-3xl font-bold gradient-text">🧃 Sauce</div>
+          <img src="/logo-white.png" alt="Sauce" className="h-12 w-auto object-contain" />
         </div>
 
         <h1 className="text-2xl font-bold text-center mb-2">Welcome Back</h1>
