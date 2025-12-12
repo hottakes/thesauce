@@ -3,6 +3,7 @@ import { Link, ExternalLink, CheckCircle2, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { addApplicantPoints } from "@/lib/applicant-utils";
 import { useState } from "react";
 
 interface WaitlistDashboardProps {
@@ -16,6 +17,7 @@ interface WaitlistDashboardProps {
 
 export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
   const [currentPoints, setCurrentPoints] = useState(data.points);
+  const [currentPosition, setCurrentPosition] = useState(data.waitlistPosition);
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const progress = Math.min((currentPoints / 100) * 100, 100);
@@ -66,19 +68,14 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
         throw completionError;
       }
 
-      // Update applicant points
-      const newPoints = currentPoints + points;
-      const { error: updateError } = await supabase
-        .from("applicants")
-        .update({ points: newPoints })
-        .eq("id", data.applicantId);
+      // Update applicant points and waitlist position using utility function
+      const result = await addApplicantPoints(data.applicantId, currentPoints, points);
       
-      if (updateError) throw updateError;
-      
-      return { newPoints };
+      return result;
     },
-    onSuccess: ({ newPoints }) => {
-      setCurrentPoints(newPoints);
+    onSuccess: (result) => {
+      setCurrentPoints(result.points);
+      setCurrentPosition(result.waitlist_position);
       queryClient.invalidateQueries({ queryKey: ["challenge_completions", data.applicantId] });
       toast({
         title: "Challenge completed! 🎉",
@@ -144,7 +141,7 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card">
           <span className="text-muted-foreground">Your position:</span>
           <span className="text-3xl font-display font-bold gradient-text">
-            #{data.waitlistPosition}
+            #{currentPosition}
           </span>
         </div>
       </motion.div>

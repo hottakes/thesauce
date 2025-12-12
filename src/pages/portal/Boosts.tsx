@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePortalAuth } from '@/hooks/usePortalAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { addApplicantPoints } from '@/lib/applicant-utils';
 import confetti from 'canvas-confetti';
 import { format } from 'date-fns';
 import { 
@@ -105,28 +106,12 @@ export const PortalBoosts: React.FC = () => {
         throw completionError;
       }
 
-      // Calculate new points
-      const newPoints = (applicant.points || 0) + challenge.points;
-
-      // Recalculate waitlist position (higher score = lower position)
-      const maxScore = 175;
-      const minPosition = 1;
-      const maxPosition = 100;
-      const normalizedScore = Math.min(newPoints, maxScore) / maxScore;
-      const basePosition = Math.round(maxPosition - (normalizedScore * (maxPosition - minPosition)));
-      const randomOffset = Math.floor(Math.random() * 5) - 2;
-      const newPosition = Math.max(1, Math.min(100, basePosition + randomOffset));
-
-      // Update applicant
-      const { error: updateError } = await supabase
-        .from('applicants')
-        .update({ 
-          points: newPoints,
-          waitlist_position: newPosition
-        })
-        .eq('id', applicant.id);
-
-      if (updateError) throw updateError;
+      // Update points and waitlist position using utility function
+      const { points: newPoints, waitlist_position: newPosition } = await addApplicantPoints(
+        applicant.id,
+        applicant.points || 0,
+        challenge.points
+      );
 
       return { newPoints, newPosition, challengePoints: challenge.points };
     },
@@ -144,9 +129,12 @@ export const PortalBoosts: React.FC = () => {
         description: 'Your waitlist position has been updated.',
       });
 
-      // Refetch data
+      // Refetch all related data for reactive updates across portal
       queryClient.invalidateQueries({ queryKey: ['my_completions', applicant?.id] });
       queryClient.invalidateQueries({ queryKey: ['all_challenges'] });
+      queryClient.invalidateQueries({ queryKey: ['portal_applicant'] });
+      queryClient.invalidateQueries({ queryKey: ['portal_completions_count'] });
+      queryClient.invalidateQueries({ queryKey: ['portal_incomplete_challenges'] });
       
       // Close modal
       setSelectedChallenge(null);

@@ -62,7 +62,7 @@ export const PortalDashboard: React.FC = () => {
   const { applicant } = usePortalAuth();
 
   const { data: completionsCount = 0 } = useQuery({
-    queryKey: ['challenge_completions_count', applicant?.id],
+    queryKey: ['portal_completions_count', applicant?.id],
     queryFn: async () => {
       if (!applicant?.id) return 0;
       const { count, error } = await supabase
@@ -91,7 +91,7 @@ export const PortalDashboard: React.FC = () => {
   });
 
   const { data: incompleteChallenges = [], isLoading: challengesLoading } = useQuery({
-    queryKey: ['incomplete_challenges', applicant?.id],
+    queryKey: ['portal_incomplete_challenges', applicant?.id],
     queryFn: async () => {
       if (!applicant?.id) return [];
       
