@@ -233,9 +233,12 @@ export const IntakeFlow = () => {
       }
 
       // Use edge function to link applicant record (bypasses RLS with service role)
-      const { error: linkError } = await supabase.functions.invoke('link-applicant', {
+      console.log('Calling link-applicant edge function with applicantId:', applicantId);
+      const { data: linkData, error: linkError } = await supabase.functions.invoke('link-applicant', {
         body: { applicantId },
       });
+
+      console.log('link-applicant response:', { data: linkData, error: linkError });
 
       if (linkError) {
         console.error('Error linking applicant to user:', linkError);
