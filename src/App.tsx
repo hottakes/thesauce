@@ -22,7 +22,6 @@ import { AdminSettings } from "./pages/admin/Settings";
 // Portal imports
 import { PortalLogin } from "./pages/portal/Login";
 import { PortalLayout } from "./components/portal/PortalLayout";
-import { PortalProtectedRoute } from "./components/portal/PortalProtectedRoute";
 import { PortalDashboard } from "./pages/portal/Dashboard";
 import { PortalOpportunities } from "./pages/portal/Opportunities";
 import { PortalBoosts } from "./pages/portal/Boosts";
@@ -62,38 +61,10 @@ const App = () => (
             {/* Portal Routes */}
             <Route path="/portal/login" element={<PortalLogin />} />
             <Route path="/portal" element={<PortalLayout />}>
-              <Route
-                index
-                element={
-                  <PortalProtectedRoute>
-                    <PortalDashboard />
-                  </PortalProtectedRoute>
-                }
-              />
-              <Route
-                path="opportunities"
-                element={
-                  <PortalProtectedRoute>
-                    <PortalOpportunities />
-                  </PortalProtectedRoute>
-                }
-              />
-              <Route
-                path="boosts"
-                element={
-                  <PortalProtectedRoute>
-                    <PortalBoosts />
-                  </PortalProtectedRoute>
-                }
-              />
-              <Route
-                path="profile"
-                element={
-                  <PortalProtectedRoute>
-                    <PortalProfile />
-                  </PortalProtectedRoute>
-                }
-              />
+              <Route index element={<PortalDashboard />} />
+              <Route path="opportunities" element={<PortalOpportunities />} />
+              <Route path="boosts" element={<PortalBoosts />} />
+              <Route path="profile" element={<PortalProfile />} />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
