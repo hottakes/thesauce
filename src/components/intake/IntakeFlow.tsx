@@ -139,17 +139,24 @@ export const IntakeFlow = () => {
     };
 
     try {
+      console.log('Attempting to save applicant with data:', JSON.stringify(completeData, null, 2));
+      
       const { data: insertedData, error } = await supabase
         .from('applicants')
         .insert(completeData)
         .select('id')
         .single();
 
+      console.log('Insert result:', { insertedData, error });
+
       if (error) {
-        console.error('Error saving applicant:', error);
+        console.error('Error saving applicant - full error:', JSON.stringify(error, null, 2));
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
+        console.error('Error details:', error.details);
         toast({
           title: "Oops!",
-          description: "There was an issue saving your application. Please try again.",
+          description: `There was an issue saving your application: ${error.message}`,
           variant: "destructive",
         });
         setIsSaving(false);
