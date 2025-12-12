@@ -22,7 +22,11 @@ import { AdminSettings } from "./pages/admin/Settings";
 // Portal imports
 import { PortalLogin } from "./pages/portal/Login";
 import { PortalLayout } from "./components/portal/PortalLayout";
+import { PortalProtectedRoute } from "./components/portal/PortalProtectedRoute";
 import { PortalDashboard } from "./pages/portal/Dashboard";
+import { PortalOpportunities } from "./pages/portal/Opportunities";
+import { PortalBoosts } from "./pages/portal/Boosts";
+import { PortalProfile } from "./pages/portal/Profile";
 
 const queryClient = new QueryClient();
 
@@ -58,7 +62,38 @@ const App = () => (
             {/* Portal Routes */}
             <Route path="/portal/login" element={<PortalLogin />} />
             <Route path="/portal" element={<PortalLayout />}>
-              <Route index element={<PortalDashboard />} />
+              <Route
+                index
+                element={
+                  <PortalProtectedRoute>
+                    <PortalDashboard />
+                  </PortalProtectedRoute>
+                }
+              />
+              <Route
+                path="opportunities"
+                element={
+                  <PortalProtectedRoute>
+                    <PortalOpportunities />
+                  </PortalProtectedRoute>
+                }
+              />
+              <Route
+                path="boosts"
+                element={
+                  <PortalProtectedRoute>
+                    <PortalBoosts />
+                  </PortalProtectedRoute>
+                }
+              />
+              <Route
+                path="profile"
+                element={
+                  <PortalProtectedRoute>
+                    <PortalProfile />
+                  </PortalProtectedRoute>
+                }
+              />
             </Route>
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
