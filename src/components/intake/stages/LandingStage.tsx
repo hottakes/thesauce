@@ -41,9 +41,8 @@ export const LandingStage = ({ onStart }: LandingStageProps) => {
       >
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            <span className="text-2xl">🧃</span>
-            <span className="font-display font-bold text-lg text-foreground">Sauce</span>
+          <Link to="/" className="flex items-center">
+            <img src="/logo-white.png" alt="Sauce" className="h-8 w-auto object-contain" />
           </Link>
 
           {/* Sign In / Dashboard Button */}
@@ -88,7 +87,7 @@ export const LandingStage = ({ onStart }: LandingStageProps) => {
             transition={{ delay: 0.2 }}
             className="mb-8"
           >
-            <span className="text-5xl">🧃</span>
+            <img src="/logo-white.png" alt="Sauce" className="h-16 w-auto object-contain mx-auto" />
           </motion.div>
 
           {/* Headlines */}

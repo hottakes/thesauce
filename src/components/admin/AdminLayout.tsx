@@ -45,8 +45,8 @@ export const AdminLayout = () => {
         <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
           {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
-        <Link to="/" className="font-semibold gradient-text hover:opacity-80 transition-opacity">
-          Sauce Admin
+        <Link to="/" className="hover:opacity-80 transition-opacity">
+          <img src="/logo-white.png" alt="Sauce" className="h-6 w-auto object-contain" />
         </Link>
         <div className="w-10" />
       </header>
@@ -61,8 +61,8 @@ export const AdminLayout = () => {
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="h-16 flex items-center px-6 border-b border-border">
-            <Link to="/" className="text-xl font-bold gradient-text hover:opacity-80 transition-opacity">
-              Sauce Admin
+            <Link to="/" className="hover:opacity-80 transition-opacity">
+              <img src="/logo-white.png" alt="Sauce" className="h-8 w-auto object-contain" />
             </Link>
           </div>
 

@@ -87,7 +87,10 @@ export const AdminLogin = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold gradient-text mb-2">Sauce Admin</h1>
+          <div className="flex justify-center mb-4">
+            <img src="/logo-white.png" alt="Sauce" className="h-12 w-auto object-contain" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Admin Portal</h1>
           <p className="text-muted-foreground">
             {isSignUp ? 'Create your admin account' : 'Sign in to your account'}
           </p>
