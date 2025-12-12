@@ -108,10 +108,19 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   }, [fetchApplicant]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    setUser(null);
-    setApplicant(null);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Supabase signOut error:', error);
+      }
+    } catch (err) {
+      console.error('SignOut exception:', err);
+    } finally {
+      // Always clear state regardless of errors
+      setSession(null);
+      setUser(null);
+      setApplicant(null);
+    }
   };
 
   return (
