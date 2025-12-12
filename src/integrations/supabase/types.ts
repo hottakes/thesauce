@@ -157,6 +157,45 @@ export type Database = {
         }
         Relationships: []
       }
+      challenge_completions: {
+        Row: {
+          applicant_id: string
+          challenge_id: string
+          completed_at: string
+          id: string
+          verified: boolean
+        }
+        Insert: {
+          applicant_id: string
+          challenge_id: string
+          completed_at?: string
+          id?: string
+          verified?: boolean
+        }
+        Update: {
+          applicant_id?: string
+          challenge_id?: string
+          completed_at?: string
+          id?: string
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_completions_applicant_id_fkey"
+            columns: ["applicant_id"]
+            isOneToOne: false
+            referencedRelation: "applicants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "challenge_completions_challenge_id_fkey"
+            columns: ["challenge_id"]
+            isOneToOne: false
+            referencedRelation: "challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenges: {
         Row: {
           created_at: string

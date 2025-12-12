@@ -136,9 +136,11 @@ export const IntakeFlow = () => {
     };
 
     try {
-      const { error } = await supabase
+      const { data: insertedData, error } = await supabase
         .from('applicants')
-        .insert(completeData);
+        .insert(completeData)
+        .select('id')
+        .single();
 
       if (error) {
         console.error('Error saving applicant:', error);
@@ -150,6 +152,9 @@ export const IntakeFlow = () => {
         setIsSaving(false);
         return;
       }
+
+      // Store the applicant ID for challenge tracking
+      setApplicantId(insertedData.id);
 
       // Update local state and proceed
       setApplicantData((prev) => ({
@@ -183,6 +188,7 @@ export const IntakeFlow = () => {
   });
 
   const getDashboardData = () => ({
+    applicantId: applicantId,
     waitlistPosition: applicantData.waitlistPosition || 50,
     referralCode: applicantData.referralCode || generateReferralCode(),
     points: applicantData.points || 50,
