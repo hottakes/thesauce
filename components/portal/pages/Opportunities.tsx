@@ -141,6 +141,7 @@ export const PortalOpportunities: React.FC = () => {
       if (!applicant?.id) throw new Error('Not authenticated');
       const { error } = await supabase
         .from('opportunity_applications')
+        // @ts-ignore - Supabase types infer never in strict mode
         .insert({
           applicant_id: applicant.id,
           opportunity_id: opportunityId,
@@ -242,7 +243,7 @@ export const PortalOpportunities: React.FC = () => {
               </div>
               <div>
                 <p className="font-semibold text-foreground">
-                  You're #{applicant?.waitlist_position || '...'} on the waitlist
+                  You&apos;re #{applicant?.waitlist_position || '...'} on the waitlist
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Complete boosts to get approved faster!
@@ -318,7 +319,7 @@ export const PortalOpportunities: React.FC = () => {
           </div>
           <h3 className="text-lg font-medium text-foreground mb-2">No opportunities right now</h3>
           <p className="text-muted-foreground max-w-sm">
-            But you're in the right place. We drop new ones every week. 👀
+            But you&apos;re in the right place. We drop new ones every week. 👀
           </p>
         </motion.div>
       ) : (

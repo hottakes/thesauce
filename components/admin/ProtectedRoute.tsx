@@ -36,7 +36,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
         <div className="text-center max-w-md p-8">
           <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
           <p className="text-muted-foreground mb-6">
-            You don't have permission to access the admin panel. Please contact an administrator.
+            You don&apos;t have permission to access the admin panel. Please contact an administrator.
           </p>
           <p className="text-sm text-muted-foreground">
             Signed in as: {user.email}

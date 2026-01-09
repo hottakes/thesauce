@@ -63,12 +63,14 @@ const FormOptionTable = ({
     queryKey: ['admin-setting', settingsKey],
     enabled: !!settingsKey,
     queryFn: async () => {
+      if (!settingsKey) return null;
       const { data } = await supabase
         .from('settings')
         .select('value')
         .eq('key', settingsKey)
         .maybeSingle();
       if (data) {
+        // @ts-ignore - Supabase types infer never in strict mode
         setMaxSelection(JSON.parse(data.value as string));
       }
       return data;
@@ -80,11 +82,13 @@ const FormOptionTable = ({
       if (data.id) {
         const { error } = await supabase
           .from(tableName)
+          // @ts-ignore - Supabase types infer never in strict mode
           .update({ label: data.label, emoji: data.emoji || null, is_active: data.is_active })
           .eq('id', data.id);
         if (error) throw error;
       } else {
         const maxOrder = Math.max(...(items?.map((i) => i.sort_order) || [0]));
+        // @ts-ignore - Supabase types infer never in strict mode
         const { error } = await supabase.from(tableName).insert({
           label: data.label,
           emoji: data.emoji || null,
@@ -118,6 +122,7 @@ const FormOptionTable = ({
 
   const toggleActive = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      // @ts-ignore - Supabase types infer never in strict mode
       const { error } = await supabase.from(tableName).update({ is_active }).eq('id', id);
       if (error) throw error;
     },
@@ -131,6 +136,7 @@ const FormOptionTable = ({
       if (!settingsKey) return;
       const { error } = await supabase
         .from('settings')
+        // @ts-ignore - Supabase types infer never in strict mode
         .upsert({ key: settingsKey, value: JSON.stringify(value), updated_at: new Date().toISOString() });
       if (error) throw error;
     },

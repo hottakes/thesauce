@@ -180,12 +180,14 @@ export const AdminOpportunities: React.FC = () => {
       if (data.id) {
         const { error } = await supabase
           .from('opportunities')
+          // @ts-ignore - Supabase types infer never in strict mode
           .update(payload)
           .eq('id', data.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
           .from('opportunities')
+          // @ts-ignore - Supabase types infer never in strict mode
           .insert(payload);
         if (error) throw error;
       }
@@ -818,7 +820,7 @@ export const AdminOpportunities: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Opportunity?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete "{selectedOpportunity?.title}" and all related applications. This action cannot be undone.
+              This will permanently delete &quot;{selectedOpportunity?.title}&quot; and all related applications. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

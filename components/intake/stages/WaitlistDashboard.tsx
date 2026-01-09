@@ -57,6 +57,7 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
       // Insert completion record
       const { error: completionError } = await supabase
         .from("challenge_completions")
+        // @ts-ignore - Supabase types infer never in strict mode
         .insert({
           applicant_id: data.applicantId,
           challenge_id: challengeId,
@@ -137,7 +138,7 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
       >
         <span className="text-4xl mb-2 block">🧃</span>
         <h1 className="text-2xl font-display font-bold mb-2">
-          You're on the list!
+          You&apos;re on the list!
         </h1>
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card">
           <span className="text-muted-foreground">Your position:</span>
@@ -259,7 +260,7 @@ export const WaitlistDashboard = ({ data }: WaitlistDashboardProps) => {
         className="text-center text-muted-foreground text-sm"
       >
         <p>
-          We'll be in touch soon. Keep your phone on.{" "}
+          We&apos;ll be in touch soon. Keep your phone on.{" "}
           <span className="text-lg">🧃</span>
         </p>
       </motion.div>

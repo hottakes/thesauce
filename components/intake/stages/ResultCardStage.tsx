@@ -82,10 +82,10 @@ export const ResultCardStage = ({ data, onContinue }: ResultCardStageProps) => {
           🎉
         </motion.span>
         <h2 className="text-2xl font-display font-bold">
-          You're in the game!
+          You&apos;re in the game!
         </h2>
         <p className="text-muted-foreground mt-2">
-          Here's your Ambassador Card
+          Here&apos;s your Ambassador Card
         </p>
       </motion.div>
 
@@ -271,7 +271,7 @@ export const ResultCardStage = ({ data, onContinue }: ResultCardStageProps) => {
                 transition={{ delay: 1 }}
               >
                 <p className="text-xs text-muted-foreground text-center mb-3">
-                  Based on your vibe, you'd crush it with:
+                  Based on your vibe, you&apos;d crush it with:
                 </p>
                 <div className="flex justify-center gap-2">
                   {BRAND_MATCHES.map((brand, index) => (

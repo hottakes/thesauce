@@ -126,7 +126,7 @@ export const LandingStage = ({ onStart }: LandingStageProps) => {
             <span className="gradient-text">Get Paid. Get Sauce.</span>
           </h1>
           <p className="text-lg text-muted-foreground mb-8">
-            We're recruiting ambassadors at Ontario universities.
+            We&apos;re recruiting ambassadors at Ontario universities.
             <br />
             <span className="text-foreground font-medium">Limited spots.</span>
           </p>

@@ -309,7 +309,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
                 className="glass-card p-4 rounded-2xl mb-6 text-center"
               >
                 <p className="text-sm text-muted-foreground">
-                  No worries — some campaigns are 19+, but most aren't. Let's
+                  No worries — some campaigns are 19+, but most aren&apos;t. Let&apos;s
                   keep going.
                 </p>
               </motion.div>
@@ -339,7 +339,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
             </div>
 
             <h2 className="text-2xl font-display font-bold mb-2 text-center">
-              Let's get to know you
+              Let&apos;s get to know you
             </h2>
             <p className="text-muted-foreground text-center mb-8">
               Tell us your name and connect your socials.
@@ -451,7 +451,7 @@ export const QualifierStage = ({ onComplete }: QualifierStageProps) => {
                 className="glass-card p-4 rounded-2xl mb-6 border-destructive/50"
               >
                 <p className="text-sm text-destructive text-center">
-                  We couldn't find this Instagram account. Please check the handle and try again.
+                  We couldn&apos;t find this Instagram account. Please check the handle and try again.
                 </p>
               </motion.div>
             )}

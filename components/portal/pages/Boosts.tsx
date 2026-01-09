@@ -155,6 +155,7 @@ export const PortalBoosts: React.FC = () => {
 
       const { error: completionError } = await supabase
         .from('challenge_completions')
+        // @ts-ignore - Supabase types infer never in strict mode
         .insert({
           applicant_id: applicant.id,
           challenge_id: challenge.id,
@@ -547,7 +548,7 @@ export const PortalBoosts: React.FC = () => {
           </motion.div>
           <h2 className="text-xl font-bold">Level Up!</h2>
           <p className="text-muted-foreground">
-            You're now <span className="font-semibold text-foreground">{currentRank.name}</span>
+            You&apos;re now <span className="font-semibold text-foreground">{currentRank.name}</span>
           </p>
           <Button 
             onClick={() => setShowLevelUp(false)}

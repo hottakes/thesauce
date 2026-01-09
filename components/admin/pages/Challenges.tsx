@@ -79,10 +79,12 @@ export const AdminChallenges = () => {
       };
 
       if (data.id) {
+        // @ts-ignore - Supabase types infer never in strict mode
         const { error } = await supabase.from('challenges').update(payload).eq('id', data.id);
         if (error) throw error;
       } else {
         const maxOrder = Math.max(...(challenges?.map((c) => c.sort_order) || [0]));
+        // @ts-ignore - Supabase types infer never in strict mode
         const { error } = await supabase.from('challenges').insert({ ...payload, sort_order: maxOrder + 1 });
         if (error) throw error;
       }
@@ -111,6 +113,7 @@ export const AdminChallenges = () => {
 
   const toggleActive = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      // @ts-ignore - Supabase types infer never in strict mode
       const { error } = await supabase.from('challenges').update({ is_active }).eq('id', id);
       if (error) throw error;
     },

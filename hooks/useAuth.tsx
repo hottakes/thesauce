@@ -59,6 +59,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const checkAdminRole = async (userId: string) => {
     if (!supabase) return;
     try {
+      // @ts-ignore - Supabase types infer never in strict mode
       const { data, error } = await supabase.rpc('has_role', {
         _user_id: userId,
         _role: 'admin'

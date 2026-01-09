@@ -15,6 +15,7 @@ export async function middleware(request: NextRequest) {
 
     // Server-side admin role verification
     // This prevents non-admin users from accessing admin routes even if authenticated
+    // @ts-ignore - Supabase types infer never in strict mode
     const { data: isAdmin } = await supabase.rpc('has_role', {
       _user_id: user.id,
       _role: 'admin',

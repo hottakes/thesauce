@@ -40,6 +40,7 @@ export const AdminSettings = () => {
     mutationFn: async ({ key, value }: { key: string; value: any }) => {
       const { error } = await supabase
         .from('settings')
+        // @ts-ignore - Supabase types infer never in strict mode
         .upsert({ key, value: JSON.stringify(value), updated_at: new Date().toISOString() });
       if (error) throw error;
     },

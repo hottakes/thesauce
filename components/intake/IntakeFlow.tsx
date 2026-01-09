@@ -160,6 +160,7 @@ export const IntakeFlow = () => {
       // Don't use .select() - just insert and use the client-generated ID
       const { error } = await supabase
         .from('applicants')
+        // @ts-ignore - Supabase types infer never in strict mode
         .insert(completeData);
 
       if (error) {

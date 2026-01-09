@@ -200,7 +200,7 @@ export const PortalDashboard: React.FC = () => {
             Welcome, <span className="text-primary">@{applicant?.instagram_handle}</span>
           </h1>
           <p className="text-sm text-muted-foreground">
-            Here's your dashboard
+            Here&apos;s your dashboard
           </p>
         </div>
       </motion.div>

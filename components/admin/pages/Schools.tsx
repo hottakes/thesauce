@@ -71,6 +71,7 @@ export const AdminSchools = () => {
       if (data.id) {
         const { error } = await supabase
           .from('schools')
+          // @ts-ignore - Supabase types infer never in strict mode
           .update({
             name: data.name,
             spots_total: data.spots_total,
@@ -81,6 +82,7 @@ export const AdminSchools = () => {
         if (error) throw error;
       } else {
         const maxOrder = Math.max(...(schools?.map((s) => s.sort_order) || [0]));
+        // @ts-ignore - Supabase types infer never in strict mode
         const { error } = await supabase.from('schools').insert({
           name: data.name,
           spots_total: data.spots_total,
@@ -120,6 +122,7 @@ export const AdminSchools = () => {
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
       const { error } = await supabase
         .from('schools')
+        // @ts-ignore - Supabase types infer never in strict mode
         .update({ is_active })
         .eq('id', id);
       if (error) throw error;

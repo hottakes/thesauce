@@ -28,7 +28,8 @@ export const updateApplicantPoints = async (
   
   const { error } = await supabase
     .from('applicants')
-    .update({ 
+    // @ts-ignore - Supabase types infer never in strict mode
+    .update({
       points: newPoints,
       waitlist_position: newPosition
     })

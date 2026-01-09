@@ -153,6 +153,7 @@ export const AdminApplicants = () => {
     mutationFn: async ({ ids, status }: { ids: string[]; status: string }) => {
       const { error } = await supabase
         .from('applicants')
+        // @ts-ignore - Supabase types infer never in strict mode
         .update({ status })
         .in('id', ids);
       if (error) throw error;

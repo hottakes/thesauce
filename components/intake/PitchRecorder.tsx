@@ -252,7 +252,7 @@ export const PitchRecorder = ({ applicantId, pitchUrl, pitchType, onPitchChange 
         <h3 className="text-lg font-display font-semibold">Record a 30-second pitch</h3>
         <div className="glass-card p-6 rounded-2xl text-center">
           <p className="text-muted-foreground">
-            Recording isn't supported in your browser. Try Chrome or Safari.
+            Recording isn&apos;t supported in your browser. Try Chrome or Safari.
           </p>
         </div>
       </div>
@@ -301,7 +301,7 @@ export const PitchRecorder = ({ applicantId, pitchUrl, pitchType, onPitchChange 
     <div className="space-y-4">
       <h3 className="text-lg font-display font-semibold">Record a 30-second pitch</h3>
       <p className="text-sm text-muted-foreground">
-        Tell us why you'd be a great ambassador. Keep it short and real.
+        Tell us why you&apos;d be a great ambassador. Keep it short and real.
       </p>
 
       {/* Idle State - Show buttons */}

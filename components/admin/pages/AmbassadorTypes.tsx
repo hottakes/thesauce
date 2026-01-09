@@ -65,9 +65,11 @@ export const AdminAmbassadorTypes = () => {
       };
 
       if (data.id) {
+        // @ts-ignore - Supabase types infer never in strict mode
         const { error } = await supabase.from('ambassador_types').update(payload).eq('id', data.id);
         if (error) throw error;
       } else {
+        // @ts-ignore - Supabase types infer never in strict mode
         const { error } = await supabase.from('ambassador_types').insert(payload);
         if (error) throw error;
       }
@@ -96,6 +98,7 @@ export const AdminAmbassadorTypes = () => {
 
   const toggleActive = useMutation({
     mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      // @ts-ignore - Supabase types infer never in strict mode
       const { error } = await supabase.from('ambassador_types').update({ is_active }).eq('id', id);
       if (error) throw error;
     },

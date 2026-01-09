@@ -61,7 +61,7 @@ export const AccountCreationStage: React.FC<AccountCreationStageProps> = ({
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-center mb-2">You're Almost In! 🎉</h1>
+        <h1 className="text-2xl font-bold text-center mb-2">You&apos;re Almost In! 🎉</h1>
         <p className="text-muted-foreground text-center mb-6">
           Create a password to access your ambassador portal
         </p>
@@ -134,7 +134,7 @@ export const AccountCreationStage: React.FC<AccountCreationStageProps> = ({
         </form>
 
         <p className="text-xs text-muted-foreground text-center mt-4">
-          You'll use this password to log into your ambassador portal
+          You&apos;ll use this password to log into your ambassador portal
         </p>
       </motion.div>
     </div>

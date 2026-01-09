@@ -349,7 +349,7 @@ export const ProfileBuilderStage = ({ onComplete, isSaving = false, applicantId 
           >
             <div>
               <h2 className="text-2xl font-display font-bold mb-2">
-                Show us what you've got
+                Show us what you&apos;ve got
               </h2>
               <p className="text-muted-foreground mb-6">
                 This is optional, but creators who submit content get reviewed first

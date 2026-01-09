@@ -209,7 +209,7 @@ export const PortalProfile: React.FC = () => {
         </div>
         {ambassadorDescriptions[applicant.ambassador_type] && (
           <p className="text-sm text-muted-foreground italic">
-            "{ambassadorDescriptions[applicant.ambassador_type]}"
+            &quot;{ambassadorDescriptions[applicant.ambassador_type]}&quot;
           </p>
         )}
         {applicant.status === 'accepted' && applicant.approved_at && (
