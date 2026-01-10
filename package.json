@@ -10,7 +10,10 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "env:setup": "./scripts/setup-local-env.sh",
+    "env:deploy:staging": "./scripts/deploy-vercel-env.sh staging",
+    "env:deploy:prod": "./scripts/deploy-vercel-env.sh production"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

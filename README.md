@@ -1,73 +1,126 @@
-# Welcome to your Lovable project
+# The Sauce
 
-## Project info
+A Next.js web application with Supabase backend.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Tech Stack
 
-## How can I edit this code?
+- **Framework**: Next.js 14 (App Router)
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Backend**: Supabase (Auth, Database, Edge Functions)
+- **Deployment**: Vercel
+- **Language**: TypeScript
 
-There are several ways of editing your application.
+## Prerequisites
 
-**Use Lovable**
+- **Node.js**: v18+ ([install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating))
+- **1Password CLI**: Required for environment setup
+  ```bash
+  brew install 1password-cli
+  op signin
+  ```
+- **Vercel CLI**: Required for deployments
+  ```bash
+  npm i -g vercel
+  vercel login
+  ```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### 1. Clone and Install
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
+```bash
 git clone <YOUR_GIT_URL>
+cd thesauce
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 2. Setup Environment Variables
 
-# Step 3: Install the necessary dependencies.
-npm i
+The easiest way to setup your local environment is using the 1Password CLI:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm run env:setup
+```
+
+This fetches secrets from the `Engineering-Staging/sauce-web` vault and creates `.env.local`.
+
+**Manual Setup**: If you prefer not to use 1Password CLI, copy `.env.example` to `.env.local` and fill in the values from 1Password manually.
+
+### 3. Run Development Server
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Environment Variables
 
-**Use GitHub Codespaces**
+| Variable | Description | Source |
+|----------|-------------|--------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | 1Password `project_url` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key | 1Password `api_key` |
+| `NEXT_PUBLIC_APP_URL` | App URL for auth redirects | Set per environment |
+| `NEXT_PUBLIC_APP_ENV` | Environment identifier | `development`/`staging`/`production` |
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### 1Password Vaults
 
-## What technologies are used for this project?
+| Environment | Vault | Item |
+|-------------|-------|------|
+| Local/Staging | `Engineering-Staging` | `sauce-web` |
+| Production | `Engineering-Prod` | `sauce-web` |
 
-This project is built with:
+## Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Deploy Environment Variables to Vercel
 
-## How can I deploy this project?
+Before deploying, ensure environment variables are set in Vercel:
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+```bash
+# Deploy staging env vars
+npm run env:deploy:staging
 
-## Can I connect a custom domain to my Lovable project?
+# Deploy production env vars
+npm run env:deploy:prod
+```
 
-Yes, you can!
+### Deploy Application
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+```bash
+# Preview/Staging deployment
+vercel
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+# Production deployment
+vercel --prod
+```
+
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
+| `npm run test` | Run tests |
+| `npm run test:ui` | Run tests with UI |
+| `npm run test:coverage` | Run tests with coverage |
+| `npm run typecheck` | Run TypeScript type checking |
+| `npm run env:setup` | Setup local env from 1Password |
+| `npm run env:deploy:staging` | Deploy staging env vars to Vercel |
+| `npm run env:deploy:prod` | Deploy production env vars to Vercel |
+
+## Project Structure
+
+```
+├── app/                    # Next.js App Router pages
+│   ├── admin/             # Admin dashboard
+│   ├── portal/            # User portal
+│   └── page.tsx           # Landing page
+├── components/            # React components
+├── hooks/                 # Custom React hooks
+├── lib/                   # Utility functions and Supabase clients
+├── scripts/               # Environment setup scripts
+├── supabase/              # Supabase config and migrations
+└── types/                 # TypeScript type definitions
+```

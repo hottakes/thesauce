@@ -117,42 +117,15 @@ ON public.opportunities FOR DELETE
 USING (has_role(auth.uid(), 'admin'::app_role));
 
 -- =============================================================================
--- FIX 6: Storage bucket security - restrict uploads to authenticated users
+-- NOTE: Storage bucket policies must be configured via Supabase Dashboard
 -- =============================================================================
-
--- Note: These need to be run against storage.objects table
--- Drop overly permissive upload policies
-DROP POLICY IF EXISTS "Anyone can upload content" ON storage.objects;
-DROP POLICY IF EXISTS "Anyone can delete own content" ON storage.objects;
-
--- Only authenticated users can upload to applicant-content
-CREATE POLICY "Authenticated users can upload content"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'applicant-content'
-  AND auth.uid() IS NOT NULL
-);
-
--- Users can only delete their own uploads (by path pattern)
-CREATE POLICY "Users can delete own content"
-ON storage.objects FOR DELETE
-USING (
-  bucket_id = 'applicant-content'
-  AND (storage.foldername(name))[1] = auth.uid()::text
-);
-
--- =============================================================================
--- AUDIT LOG: Record this security fix
--- =============================================================================
-
-COMMENT ON POLICY "Users view own application" ON public.applicants IS
-  'Security fix 2026-01-08: Restricted from USING(true) to own record or admin only';
-
-COMMENT ON POLICY "Users view own applications" ON public.opportunity_applications IS
-  'Security fix 2026-01-08: Restricted from USING(true) to own applications or admin only';
-
-COMMENT ON POLICY "Anyone can view active opportunities" ON public.opportunities IS
-  'Security fix 2026-01-08: Restricted from USING(true) to active only for public';
-
-COMMENT ON POLICY "Authenticated users can upload content" ON storage.objects IS
-  'Security fix 2026-01-08: Restricted uploads to authenticated users only';
+-- Storage policies cannot be managed via SQL migrations because storage.objects
+-- is owned by Supabase. Configure these manually in Dashboard → Storage → Policies:
+--
+-- For bucket "applicant-content":
+--   INSERT: auth.uid() IS NOT NULL
+--   DELETE: (storage.foldername(name))[1] = auth.uid()::text
+--
+-- For bucket "instagram-profiles":
+--   SELECT: true (public read)
+--   INSERT: service_role only (via edge function)
