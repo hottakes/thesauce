@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Mail, Lock } from 'lucide-react';
 import { z } from 'zod';
 import type { Session } from '@supabase/supabase-js';
+import { ForgotPasswordModal } from '../ForgotPasswordModal';
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: 'Please enter a valid email address' }),
@@ -23,6 +24,7 @@ export const PortalLogin: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
 
   // Check if already logged in
   useEffect(() => {
@@ -154,10 +156,15 @@ export const PortalLogin: React.FC = () => {
         <button
           type="button"
           className="w-full text-sm text-muted-foreground hover:text-foreground transition-colors mt-4"
-          onClick={() => toast({ title: 'Coming soon', description: 'Password reset will be available soon.' })}
+          onClick={() => setForgotPasswordOpen(true)}
         >
           Forgot password?
         </button>
+
+        <ForgotPasswordModal
+          open={forgotPasswordOpen}
+          onOpenChange={setForgotPasswordOpen}
+        />
 
         <div className="relative my-6">
           <div className="absolute inset-0 flex items-center">

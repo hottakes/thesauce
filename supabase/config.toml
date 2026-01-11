@@ -1,7 +1,13 @@
 project_id = "xyyjpudqpmeuxgvvlmtz"
 
+# Instagram Lookup - Public endpoint
+# Intentionally public (no JWT required) because this is called during the
+# intake application process before users create accounts.
 [functions.instagram-lookup]
 verify_jwt = false
 
+# Link Applicant - Authenticated endpoint
+# Requires valid JWT - links an applicant record to an authenticated user.
+# Supabase validates the JWT before the function code runs.
 [functions.link-applicant]
-verify_jwt = false
+verify_jwt = true

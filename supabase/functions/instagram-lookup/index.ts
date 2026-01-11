@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+/**
+ * Instagram Lookup Edge Function
+ *
+ * Fetches Instagram profile information for intake form validation.
+ * This function is intentionally public (verify_jwt = false) because
+ * it's called during the application process before users create accounts.
+ */
 
 interface InstagramProfile {
   username: string;
@@ -74,13 +78,14 @@ async function downloadAndStoreProfilePic(imageUrl: string, username: string): P
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflightResponse = handleCorsPreflightRequest(req);
+  if (preflightResponse) return preflightResponse;
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const { username } = await req.json();
-    
+
     if (!username) {
       return new Response(
         JSON.stringify({ error: 'Username is required' }),

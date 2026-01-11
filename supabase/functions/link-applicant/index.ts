@@ -1,16 +1,21 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders, handleCorsPreflightRequest } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+/**
+ * Link Applicant Edge Function
+ *
+ * Links an applicant record to an authenticated user account.
+ * Requires verify_jwt = true in config.toml - Supabase validates the JWT
+ * before this code runs, ensuring only authenticated users can call this function.
+ */
 
 serve(async (req) => {
   // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflightResponse = handleCorsPreflightRequest(req);
+  if (preflightResponse) return preflightResponse;
+
+  const corsHeaders = getCorsHeaders(req);
 
   try {
     const { applicantId } = await req.json();
@@ -23,39 +28,33 @@ serve(async (req) => {
       );
     }
 
-    // Get the user from the authorization header
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error('Missing authorization header');
-      return new Response(
-        JSON.stringify({ error: 'Missing authorization header' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    // With verify_jwt = true, Supabase validates the JWT before reaching this code.
+    // The Authorization header is guaranteed to contain a valid token at this point.
+    const authHeader = req.headers.get('Authorization')!;
 
-    // Create a client with the user's JWT to get their user info
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Use the user's JWT to get their user ID
+    // Use the validated JWT to get user info
     const userClient = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
     const { data: { user }, error: userError } = await userClient.auth.getUser();
 
+    // Defensive check - should not happen with verify_jwt = true
     if (userError || !user) {
-      console.error('Error getting user:', userError);
+      console.error('Unexpected: User validation failed after JWT verification:', userError);
       return new Response(
-        JSON.stringify({ error: 'Invalid or expired token' }),
+        JSON.stringify({ error: 'Authentication failed' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     console.log(`Linking applicant ${applicantId} to user ${user.id} (${user.email})`);
 
-    // Use service role to update the applicant record
+    // Use service role to update the applicant record (bypasses RLS)
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
 
     // Verify the applicant exists and email matches
@@ -73,7 +72,7 @@ serve(async (req) => {
       );
     }
 
-    // Verify email matches for security
+    // Verify email matches for security - prevents linking to wrong user
     if (applicant.email?.toLowerCase() !== user.email?.toLowerCase()) {
       console.error(`Email mismatch: applicant email ${applicant.email} vs user email ${user.email}`);
       return new Response(
@@ -82,7 +81,7 @@ serve(async (req) => {
       );
     }
 
-    // Check if already linked
+    // Check if already linked (idempotent operation)
     if (applicant.user_id) {
       console.log(`Applicant already linked to user ${applicant.user_id}`);
       return new Response(
@@ -114,6 +113,7 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Unexpected error:', error);
+    const corsHeaders = getCorsHeaders(req);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

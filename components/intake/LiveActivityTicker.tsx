@@ -14,7 +14,14 @@ const FIRST_NAMES = [
 
 const getRandomItem = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
 
-const generateActivity = () => ({
+interface Activity {
+  id: number;
+  name: string;
+  school: string;
+  timeAgo: string;
+}
+
+const generateActivity = (): Activity => ({
   id: Date.now(),
   name: getRandomItem(FIRST_NAMES),
   school: getRandomItem(ONTARIO_UNIVERSITIES),
@@ -22,15 +29,23 @@ const generateActivity = () => ({
 });
 
 export const LiveActivityTicker = () => {
-  const [activity, setActivity] = useState(generateActivity());
+  const [activity, setActivity] = useState<Activity | null>(null);
 
   useEffect(() => {
+    // Generate initial activity on client-side only to avoid hydration mismatch
+    setActivity(generateActivity());
+
     const interval = setInterval(() => {
       setActivity(generateActivity());
     }, 4000);
 
     return () => clearInterval(interval);
   }, []);
+
+  // Don't render until client-side activity is generated (avoids hydration mismatch)
+  if (!activity) {
+    return <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 h-10" />;
+  }
 
   return (
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">

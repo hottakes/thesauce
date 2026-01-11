@@ -61,14 +61,21 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event: AuthChangeEvent, currentSession: Session | null) => {
-        // Handle session expiry
-        if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED' && !currentSession) {
+        // Determine if we should clear the session:
+        // - Explicit sign out
+        // - Token refresh failed (no session returned)
+        const shouldClearSession =
+          event === 'SIGNED_OUT' ||
+          (event === 'TOKEN_REFRESHED' && !currentSession);
+
+        if (shouldClearSession) {
           setSession(null);
           setUser(null);
           setApplicant(null);
           setIsLoading(false);
 
-          // Show session expired message
+          // Show session expired message only for explicit sign out when user had a session
+          // (TOKEN_REFRESHED failures are silent - user will see login prompt)
           if (event === 'SIGNED_OUT' && session) {
             toast({
               title: 'Session expired',

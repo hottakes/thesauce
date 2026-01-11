@@ -29,8 +29,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Portal routes protection (except login page)
-  if (pathname.startsWith('/portal') && pathname !== '/portal/login') {
+  // Portal routes protection (except login and reset-password pages)
+  if (pathname.startsWith('/portal') &&
+      pathname !== '/portal/login' &&
+      pathname !== '/portal/reset-password') {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = '/portal/login';
