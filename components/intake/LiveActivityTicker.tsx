@@ -1,3 +1,5 @@
+"use client";
+
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
 import { ONTARIO_UNIVERSITIES } from "@/types/applicant";
@@ -30,8 +32,10 @@ const generateActivity = (): Activity => ({
 
 export const LiveActivityTicker = () => {
   const [activity, setActivity] = useState<Activity | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Generate initial activity on client-side only to avoid hydration mismatch
     setActivity(generateActivity());
 
@@ -42,9 +46,9 @@ export const LiveActivityTicker = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // Don't render until client-side activity is generated (avoids hydration mismatch)
-  if (!activity) {
-    return <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 h-10" />;
+  // Return null during SSR to prevent any hydration mismatch
+  if (!mounted || !activity) {
+    return null;
   }
 
   return (
