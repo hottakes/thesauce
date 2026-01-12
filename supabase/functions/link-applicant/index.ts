@@ -21,7 +21,6 @@ serve(async (req) => {
     const { applicantId } = await req.json();
 
     if (!applicantId) {
-      console.error('Missing applicantId in request');
       return new Response(
         JSON.stringify({ error: 'Missing applicantId' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -45,14 +44,11 @@ serve(async (req) => {
 
     // Defensive check - should not happen with verify_jwt = true
     if (userError || !user) {
-      console.error('Unexpected: User validation failed after JWT verification:', userError);
       return new Response(
         JSON.stringify({ error: 'Authentication failed' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log(`Linking applicant ${applicantId} to user ${user.id} (${user.email})`);
 
     // Use service role to update the applicant record (bypasses RLS)
     const adminClient = createClient(supabaseUrl, supabaseServiceKey);
@@ -65,7 +61,6 @@ serve(async (req) => {
       .single();
 
     if (fetchError || !applicant) {
-      console.error('Applicant not found:', fetchError);
       return new Response(
         JSON.stringify({ error: 'Applicant not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -74,7 +69,6 @@ serve(async (req) => {
 
     // Verify email matches for security - prevents linking to wrong user
     if (applicant.email?.toLowerCase() !== user.email?.toLowerCase()) {
-      console.error(`Email mismatch: applicant email ${applicant.email} vs user email ${user.email}`);
       return new Response(
         JSON.stringify({ error: 'Email mismatch - cannot link applicant to different user' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -83,7 +77,6 @@ serve(async (req) => {
 
     // Check if already linked (idempotent operation)
     if (applicant.user_id) {
-      console.log(`Applicant already linked to user ${applicant.user_id}`);
       return new Response(
         JSON.stringify({ success: true, message: 'Already linked' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -97,22 +90,18 @@ serve(async (req) => {
       .eq('id', applicantId);
 
     if (updateError) {
-      console.error('Error updating applicant:', updateError);
       return new Response(
         JSON.stringify({ error: 'Failed to link applicant' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log(`Successfully linked applicant ${applicantId} to user ${user.id}`);
-
     return new Response(
       JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
-    console.error('Unexpected error:', error);
+  } catch {
     const corsHeaders = getCorsHeaders(req);
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),

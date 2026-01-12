@@ -99,8 +99,9 @@ export const AdminSchools = () => {
       setEditSchool(null);
       toast({ title: 'School saved successfully' });
     },
-    onError: (err: any) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     },
   });
 
@@ -113,8 +114,9 @@ export const AdminSchools = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-schools'] });
       toast({ title: 'School deleted' });
     },
-    onError: (err: any) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     },
   });
 

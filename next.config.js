@@ -48,6 +48,8 @@ const nextConfig = {
           },
           {
             key: 'Content-Security-Policy',
+            // Note: unsafe-inline and unsafe-eval are required for Next.js React hydration
+            // Consider implementing nonce-based CSP for stricter security
             value: [
               "default-src 'self'",
               "script-src 'self' 'unsafe-eval' 'unsafe-inline' blob:",
@@ -58,6 +60,8 @@ const nextConfig = {
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",
+              "object-src 'none'",
+              "upgrade-insecure-requests",
             ].join('; '),
           },
         ],

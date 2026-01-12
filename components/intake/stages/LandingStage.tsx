@@ -21,10 +21,15 @@ export const LandingStage = ({ onStart }: LandingStageProps) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
-      setIsLoggedIn(!!session);
-      setIsLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }: { data: { session: Session | null } }) => {
+        setIsLoggedIn(!!session);
+        setIsLoading(false);
+      })
+      .catch(() => {
+        // Session check failed - continue with logged out state
+        setIsLoading(false);
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_: AuthChangeEvent, session: Session | null) => {
       setIsLoggedIn(!!session);

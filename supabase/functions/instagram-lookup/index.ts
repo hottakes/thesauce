@@ -25,8 +25,6 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function downloadAndStoreProfilePic(imageUrl: string, username: string): Promise<string | null> {
   try {
-    console.log(`Downloading profile picture for ${username} from Instagram CDN...`);
-    
     // Fetch the image from Instagram's CDN
     const imageResponse = await fetch(imageUrl, {
       headers: {
@@ -35,7 +33,6 @@ async function downloadAndStoreProfilePic(imageUrl: string, username: string): P
     });
 
     if (!imageResponse.ok) {
-      console.error(`Failed to download image: ${imageResponse.status}`);
       return null;
     }
 
@@ -45,9 +42,6 @@ async function downloadAndStoreProfilePic(imageUrl: string, username: string): P
 
     // Generate unique filename
     const filename = `${username}_${Date.now()}.jpg`;
-    const storagePath = `instagram-profiles/${filename}`;
-
-    console.log(`Uploading profile picture to Supabase Storage: ${storagePath}`);
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
@@ -58,7 +52,6 @@ async function downloadAndStoreProfilePic(imageUrl: string, username: string): P
       });
 
     if (error) {
-      console.error('Storage upload error:', error);
       return null;
     }
 
@@ -67,11 +60,9 @@ async function downloadAndStoreProfilePic(imageUrl: string, username: string): P
       .from('instagram-profiles')
       .getPublicUrl(filename);
 
-    console.log(`Profile picture stored successfully: ${urlData.publicUrl}`);
     return urlData.publicUrl;
 
-  } catch (error) {
-    console.error('Error downloading/storing profile picture:', error);
+  } catch {
     return null;
   }
 }
@@ -103,8 +94,6 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Looking up Instagram profile for: ${cleanUsername}`);
-
     // Use Instagram's public web API to fetch profile data
     const response = await fetch(
       `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(cleanUsername)}`,
@@ -118,8 +107,6 @@ serve(async (req) => {
     );
 
     if (!response.ok) {
-      console.log(`Instagram API returned status: ${response.status}`);
-      
       if (response.status === 404) {
         return new Response(
           JSON.stringify({ 
@@ -180,15 +167,12 @@ serve(async (req) => {
       verified: user.is_verified || false,
     };
 
-    console.log(`Found profile for ${cleanUsername}: ${profile.followers} followers, verified: ${profile.verified}, profilePic stored: ${!!storedProfilePicUrl}`);
-
     return new Response(
       JSON.stringify(profile),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
-  } catch (error) {
-    console.error('Error looking up Instagram profile:', error);
+  } catch {
     return new Response(
       JSON.stringify({ 
         error: 'Failed to lookup profile',

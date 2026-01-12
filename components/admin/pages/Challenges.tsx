@@ -95,8 +95,9 @@ export const AdminChallenges = () => {
       setEditItem(null);
       toast({ title: 'Challenge saved' });
     },
-    onError: (err: any) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     },
   });
 

@@ -58,7 +58,11 @@ export const IntakeFlow = () => {
   // This ensures a clean state for new applicants
   useEffect(() => {
     const clearSession = async () => {
-      await supabase.auth.signOut();
+      try {
+        await supabase.auth.signOut();
+      } catch {
+        // Ignore sign-out errors - we still want to proceed with a clean state
+      }
       setIsReady(true);
     };
     clearSession();

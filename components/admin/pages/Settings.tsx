@@ -48,8 +48,9 @@ export const AdminSettings = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-settings'] });
       toast({ title: 'Setting saved' });
     },
-    onError: (err: any) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     },
   });
 
@@ -75,8 +76,9 @@ export const AdminSettings = () => {
       toast({ title: 'All applicants deleted' });
       setDeleteConfirm('');
     },
-    onError: (err: any) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     },
   });
 

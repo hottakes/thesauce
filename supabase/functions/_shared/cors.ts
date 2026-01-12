@@ -1,7 +1,7 @@
 /**
  * Environment-aware CORS configuration for Supabase Edge Functions.
  *
- * Reads ALLOWED_ORIGINS from environment, with fallback to development defaults.
+ * IMPORTANT: ALLOWED_ORIGINS must be set in production!
  * Format: comma-separated list of origins
  * Example: "https://thesauce.app,https://www.thesauce.app"
  */
@@ -11,6 +11,11 @@ const DEFAULT_DEV_ORIGINS = [
   'http://127.0.0.1:3000',
 ];
 
+// Check if we're running in Supabase Edge Functions (production)
+function isProduction(): boolean {
+  return !!Deno.env.get('DENO_DEPLOYMENT_ID');
+}
+
 export function getAllowedOrigins(): string[] {
   const envOrigins = Deno.env.get('ALLOWED_ORIGINS');
 
@@ -18,7 +23,13 @@ export function getAllowedOrigins(): string[] {
     return envOrigins.split(',').map((o) => o.trim()).filter(Boolean);
   }
 
-  // Fallback for local development
+  // In production, require explicit ALLOWED_ORIGINS configuration
+  // Returning empty array will reject all CORS requests
+  if (isProduction()) {
+    return [];
+  }
+
+  // Fallback for local development only
   return DEFAULT_DEV_ORIGINS;
 }
 

@@ -7,12 +7,31 @@ import { Label } from '@/components/ui/label';
 import { z } from 'zod';
 
 const passwordSchema = z.object({
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ['confirmPassword'],
 });
+
+// Password strength checker for UI feedback
+const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^A-Za-z0-9]/.test(password)) score++;
+
+  if (score <= 2) return { score, label: 'Weak', color: 'bg-red-500' };
+  if (score <= 4) return { score, label: 'Medium', color: 'bg-yellow-500' };
+  return { score, label: 'Strong', color: 'bg-green-500' };
+};
 
 interface AccountCreationStageProps {
   email: string;
@@ -95,6 +114,25 @@ export const AccountCreationStage: React.FC<AccountCreationStageProps> = ({
             </div>
             {errors.password && (
               <p className="text-sm text-destructive">{errors.password}</p>
+            )}
+            {password && !errors.password && (
+              <div className="space-y-1">
+                <div className="flex gap-1">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-1 flex-1 rounded ${
+                        i <= getPasswordStrength(password).score
+                          ? getPasswordStrength(password).color
+                          : 'bg-muted'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Password strength: {getPasswordStrength(password).label}
+                </p>
+              </div>
             )}
           </div>
 

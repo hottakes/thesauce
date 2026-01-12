@@ -102,16 +102,21 @@ export const PortalAuthProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session: initialSession } }: { data: { session: Session | null } }) => {
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
+    supabase.auth.getSession()
+      .then(({ data: { session: initialSession } }: { data: { session: Session | null } }) => {
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
 
-      if (initialSession?.user) {
-        fetchApplicant(initialSession.user.id);
-      } else {
+        if (initialSession?.user) {
+          fetchApplicant(initialSession.user.id);
+        } else {
+          setIsLoading(false);
+        }
+      })
+      .catch(() => {
+        // Session check failed - user will need to login
         setIsLoading(false);
-      }
-    });
+      });
 
     return () => subscription.unsubscribe();
   }, [fetchApplicant]);

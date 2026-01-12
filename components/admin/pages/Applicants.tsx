@@ -163,8 +163,9 @@ export const AdminApplicants = () => {
       setSelectedIds([]);
       toast({ title: 'Status updated successfully' });
     },
-    onError: (err: any) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     },
   });
 
@@ -179,8 +180,9 @@ export const AdminApplicants = () => {
       setSelectedIds([]);
       toast({ title: 'Applicants deleted' });
     },
-    onError: (err: any) => {
-      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    onError: (err) => {
+      const message = err instanceof Error ? err.message : 'An error occurred';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     },
   });
 
