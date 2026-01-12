@@ -75,17 +75,10 @@ fi
 
 echo "Setting Vercel environment variables..."
 
-# Remove existing env vars first (ignore errors if they don't exist)
-vercel env rm NEXT_PUBLIC_SUPABASE_URL "$VERCEL_ENV" -y 2>/dev/null || true
-vercel env rm NEXT_PUBLIC_SUPABASE_ANON_KEY "$VERCEL_ENV" -y 2>/dev/null || true
-vercel env rm NEXT_PUBLIC_APP_URL "$VERCEL_ENV" -y 2>/dev/null || true
-vercel env rm NEXT_PUBLIC_APP_ENV "$VERCEL_ENV" -y 2>/dev/null || true
-
-# Add env vars
-echo "$SUPABASE_URL" | vercel env add NEXT_PUBLIC_SUPABASE_URL "$VERCEL_ENV"
-echo "$SUPABASE_ANON_KEY" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY "$VERCEL_ENV"
-echo "$APP_URL" | vercel env add NEXT_PUBLIC_APP_URL "$VERCEL_ENV"
-echo "$ENV" | vercel env add NEXT_PUBLIC_APP_ENV "$VERCEL_ENV"
+echo "$SUPABASE_URL" | vercel env add NEXT_PUBLIC_SUPABASE_URL "$VERCEL_ENV" --force
+echo "$SUPABASE_ANON_KEY" | vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY "$VERCEL_ENV" --force
+echo "$APP_URL" | vercel env add NEXT_PUBLIC_APP_URL "$VERCEL_ENV" --force
+echo "$ENV" | vercel env add NEXT_PUBLIC_APP_ENV "$VERCEL_ENV" --force
 
 echo ""
 echo "Successfully deployed environment variables to Vercel ($VERCEL_ENV)!"
