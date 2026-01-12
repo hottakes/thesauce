@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { AnimatedBackground } from "./AnimatedBackground";
@@ -10,6 +10,8 @@ import { QualifierStage } from "./stages/QualifierStage";
 import { ProfileBuilderStage } from "./stages/ProfileBuilderStage";
 import { ResultCardStage } from "./stages/ResultCardStage";
 import { AccountCreationStage } from "./stages/AccountCreationStage";
+import { EmailVerificationPendingStage } from "./stages/EmailVerificationPendingStage";
+import confetti from "canvas-confetti";
 import { supabase } from "@/lib/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -19,7 +21,7 @@ import {
   scoreToWaitlistPosition,
 } from "@/types/applicant";
 
-type Stage = "landing" | "qualifier" | "profile" | "result" | "account";
+type Stage = "landing" | "qualifier" | "profile" | "result" | "account" | "email-verification";
 
 interface AmbassadorType {
   id: string;
@@ -51,6 +53,8 @@ export const IntakeFlow = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isCreatingAccount, setIsCreatingAccount] = useState(false);
   const [isReady, setIsReady] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState<string>('');
+  const signupInProgressRef = useRef(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -211,78 +215,165 @@ export const IntakeFlow = () => {
       return;
     }
 
+    // Prevent multiple concurrent signup attempts
+    if (signupInProgressRef.current) {
+      return;
+    }
+    signupInProgressRef.current = true;
     setIsCreatingAccount(true);
 
-    try {
-      // Create the auth account
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
-        (typeof window !== 'undefined' ? window.location.origin : '');
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: applicantData.email,
-        password,
-        options: {
-          emailRedirectTo: `${baseUrl}/portal`,
-        },
-      });
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ||
+      (typeof window !== 'undefined' ? window.location.origin : '');
 
-      if (signUpError) {
-        // Check for specific error types
-        if (signUpError.message.includes('already registered')) {
+    // Retry logic with exponential backoff for rate limiting
+    const maxRetries = 3;
+    let lastError: string | null = null;
+
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        // Use server-side API route for signup (better rate limit handling)
+        const response = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: applicantData.email,
+            password,
+            applicantId,
+            redirectTo: `${baseUrl}/portal`,
+          }),
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+          // Check for rate limiting (429)
+          if (response.status === 429 && attempt < maxRetries - 1) {
+            // Wait with exponential backoff: 2s, 4s, 8s
+            const waitTime = Math.pow(2, attempt + 1) * 1000;
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+            continue;
+          }
+
+          // Handle specific error types
+          if (response.status === 429 || result.code === 'RATE_LIMITED') {
+            toast({
+              title: "Too Many Attempts",
+              description: "Please wait a few minutes before trying again. Supabase limits signup requests.",
+              variant: "destructive",
+            });
+          } else if (response.status === 409 || result.code === 'USER_EXISTS') {
+            toast({
+              title: "Account Exists",
+              description: "An account with this email already exists. Please log in to the portal instead.",
+              variant: "destructive",
+            });
+          } else {
+            toast({
+              title: "Account Creation Failed",
+              description: result.error || "Please try again.",
+              variant: "destructive",
+            });
+          }
+          signupInProgressRef.current = false;
+          setIsCreatingAccount(false);
+          return;
+        }
+
+        // Handle warning (account created but linking failed)
+        if (result.warning) {
           toast({
-            title: "Account Exists",
-            description: "An account with this email already exists. Please log in to the portal instead.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Account Creation Failed",
-            description: signUpError.message,
-            variant: "destructive",
+            title: "Warning",
+            description: result.warning,
+            variant: "default",
           });
         }
-        setIsCreatingAccount(false);
-        return;
-      }
 
-      if (!signUpData.user || !signUpData.session) {
-        toast({
-          title: "Error",
-          description: "Failed to create account. Please try again.",
-          variant: "destructive",
+        // Check if email confirmation is required
+        if (result.emailConfirmationRequired) {
+          setVerificationEmail(applicantData.email!);
+          toast({
+            title: "Almost there!",
+            description: "Check your email to complete signup.",
+          });
+          setStage('email-verification');
+          signupInProgressRef.current = false;
+          setIsCreatingAccount(false);
+          return;
+        }
+
+        // Refresh the client session to pick up the new session cookies
+        await supabase.auth.getSession();
+
+        // Fire celebratory confetti for immediate session
+        const colors = ["#FF6B35", "#FF3366", "#FFD700", "#00FF88"];
+        confetti({
+          particleCount: 80,
+          spread: 70,
+          origin: { y: 0.6 },
+          colors: colors,
         });
-        setIsCreatingAccount(false);
-        return;
-      }
 
-      // Use edge function to link applicant record (bypasses RLS with service role)
-      const { error: linkError } = await supabase.functions.invoke('link-applicant', {
-        body: { applicantId },
-      });
-
-      if (linkError) {
         toast({
-          title: "Warning",
-          description: "Account created but there was an issue linking your application. Please contact support.",
-          variant: "default",
+          title: "Welcome to Sauce!",
+          description: "Your account has been created successfully.",
         });
+
+        // Navigate to portal
+        router.replace('/portal');
+        return;
+      } catch (error) {
+        lastError = (error as Error).message;
+        // Retry on network errors
+        if (attempt < maxRetries - 1) {
+          const waitTime = Math.pow(2, attempt + 1) * 1000;
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
       }
+    }
 
-      toast({
-        title: "Welcome to Sauce! 🧃",
-        description: "Your account has been created successfully.",
-      });
+    // All retries failed
+    toast({
+      title: "Connection Error",
+      description: lastError || "Please check your internet connection and try again.",
+      variant: "destructive",
+    });
+    signupInProgressRef.current = false;
+    setIsCreatingAccount(false);
+  };
 
-      // Navigate to portal
-      router.replace('/portal');
-    } catch {
+  const handleResendEmail = async () => {
+    const response = await fetch('/api/auth/resend-verification', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: verificationEmail }),
+    });
+
+    if (response.status === 429) {
       toast({
-        title: "Connection Error",
-        description: "Please check your internet connection and try again.",
+        title: "Please wait",
+        description: "Too many requests. Try again in 60 seconds.",
         variant: "destructive",
       });
-    } finally {
-      setIsCreatingAccount(false);
+      throw new Error('Rate limited');
     }
+
+    if (!response.ok) {
+      const data = await response.json();
+      toast({
+        title: "Error",
+        description: data.error || "Failed to resend email.",
+        variant: "destructive",
+      });
+      throw new Error(data.error);
+    }
+
+    toast({
+      title: "Email sent!",
+      description: "Check your inbox.",
+    });
   };
 
   const getResultCardData = () => ({
@@ -323,6 +414,13 @@ export const IntakeFlow = () => {
             email={applicantData.email || ''}
             onComplete={handleAccountCreate}
             isCreating={isCreatingAccount}
+          />
+        )}
+        {stage === "email-verification" && (
+          <EmailVerificationPendingStage
+            email={verificationEmail}
+            onResendEmail={handleResendEmail}
+            onBackToAccount={() => setStage('account')}
           />
         )}
       </StageWrapper>

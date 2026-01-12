@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,8 @@ import { Loader2, Mail, Lock } from 'lucide-react';
 import { z } from 'zod';
 import type { Session } from '@supabase/supabase-js';
 import { ForgotPasswordModal } from '../ForgotPasswordModal';
+import { EmailVerificationBanner } from '../EmailVerificationBanner';
+import confetti from 'canvas-confetti';
 
 const loginSchema = z.object({
   email: z.string().trim().email({ message: 'Please enter a valid email address' }),
@@ -19,12 +21,14 @@ const loginSchema = z.object({
 
 export const PortalLogin: React.FC = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [showVerificationBanner, setShowVerificationBanner] = useState(false);
 
   // Check if already logged in
   useEffect(() => {
@@ -34,6 +38,34 @@ export const PortalLogin: React.FC = () => {
       }
     });
   }, [router]);
+
+  // Handle email verification query params
+  useEffect(() => {
+    const confirmed = searchParams.get('confirmed');
+
+    if (confirmed === 'pending') {
+      setShowVerificationBanner(true);
+    } else if (confirmed === 'success') {
+      // Fire celebratory confetti for successful verification
+      const colors = ["#FF6B35", "#FF3366", "#FFD700", "#00FF88"];
+      confetti({
+        particleCount: 100,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: colors,
+      });
+
+      toast({
+        title: "Email verified!",
+        description: "You can now sign in to your account.",
+      });
+
+      // Clear query param from URL
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, '', '/portal/login');
+      }
+    }
+  }, [searchParams, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +124,11 @@ export const PortalLogin: React.FC = () => {
         <div className="flex justify-center mb-6">
           <img src="/logo-white.png" alt="Sauce" className="h-12 w-auto object-contain" />
         </div>
+
+        {/* Email verification banner */}
+        {showVerificationBanner && (
+          <EmailVerificationBanner onDismiss={() => setShowVerificationBanner(false)} />
+        )}
 
         <h1 className="text-2xl font-bold text-center mb-2">Welcome Back</h1>
         <p className="text-muted-foreground text-center mb-8">
