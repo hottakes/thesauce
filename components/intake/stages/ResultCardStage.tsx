@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Share2, ArrowRight, Trophy, Users, Sparkles } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import confetti from "canvas-confetti";
 
 interface ResultCardStageProps {
@@ -16,6 +16,8 @@ interface ResultCardStageProps {
 const BRAND_MATCHES = ["Prime", "GymShark", "Monster"];
 
 export const ResultCardStage = ({ data, onContinue }: ResultCardStageProps) => {
+  const [isSharing, setIsSharing] = useState<boolean>(false);
+
   useEffect(() => {
     // Fire confetti on mount
     const duration = 3000;
@@ -53,13 +55,21 @@ export const ResultCardStage = ({ data, onContinue }: ResultCardStageProps) => {
     });
   }, []);
 
-  const handleShare = () => {
-    if (typeof window !== 'undefined' && navigator.share) {
-      navigator.share({
+  const handleShare = async (): Promise<void> => {
+    if (isSharing) return;
+    if (typeof window === "undefined" || !navigator.share) return;
+
+    setIsSharing(true);
+    try {
+      await navigator.share({
         title: "I just got my Sauce Ambassador Card! 🧃",
         text: `I'm ${data.ambassadorType.name}! See if you qualify to join the Sauce crew.`,
         url: window.location.href,
       });
+    } catch {
+      // User cancelled or share failed - silently ignore
+    } finally {
+      setIsSharing(false);
     }
   };
 
